@@ -1,4 +1,4 @@
-# 🚌 Smart University Transport Management System
+# 🚌 Campus Bus Pass Management System
 
 A web-based Smart University Transport Management System designed to digitize and simplify university transportation services. The system enables students to register for transport, allows transport administrators to manage buses and drivers, and provides drivers with a secure platform to verify students and handle emergency situations efficiently.
 
@@ -6,7 +6,7 @@ A web-based Smart University Transport Management System designed to digitize an
 
 # 📖 Project Overview
 
-The Smart University Transport Management System replaces manual bus pass verification and attendance with a digital platform.
+The Campus Bus Pass Transport Management System replaces manual bus pass verification and attendance with a digital platform.
 
 Students register using their official college email, submit transport requests, and receive a permanent Bus Pass ID after approval by the Transport Admin.
 
