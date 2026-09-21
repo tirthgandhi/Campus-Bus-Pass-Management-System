@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const attendanceSchema = new mongoose.Schema(
+const busAssignmentSchema = new mongoose.Schema(
   {
     student: {
       type: mongoose.Schema.Types.ObjectId,
@@ -29,28 +29,25 @@ const attendanceSchema = new mongoose.Schema(
     busPassId: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
 
-    date: {
-      type: Date,
-      required: true,
-    },
-
-    boardingTime: {
-      type: Date,
-      default: null,
-    },
-
-    markedBy: {
+    assignedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Driver",
+      ref: "Admin",
       required: true,
+    },
+
+    assignedAt: {
+      type: Date,
+      default: Date.now,
     },
 
     status: {
       type: String,
-      enum: ["present", "absent"],
+      enum: ["active", "inactive"],
+      default: "active",
       required: true,
     },
   },
@@ -59,11 +56,6 @@ const attendanceSchema = new mongoose.Schema(
   }
 );
 
-attendanceSchema.index(
-  { student: 1, bus: 1, route: 1, date: 1 },
-  { unique: true }
-);
+const BusAssignment = mongoose.model("BusAssignment", busAssignmentSchema);
 
-const Attendance = mongoose.model("Attendance", attendanceSchema);
-
-module.exports = Attendance;
+module.exports = BusAssignment;

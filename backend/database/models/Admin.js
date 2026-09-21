@@ -1,30 +1,31 @@
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema(
+const adminSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
+
+    adminId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
     name: {
       type: String,
       required: true,
       trim: true,
     },
 
-    email: {
+    department: {
       type: String,
       required: true,
-      unique: true,
-      lowercase: true,
       trim: true,
-    },
-
-    password: {
-      type: String,
-      required: true,
-    },
-
-    role: {
-      type: String,
-      enum: ["student", "driver", "admin"],
-      required: true,
     },
   },
   {
@@ -32,6 +33,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-const User = mongoose.model("User", userSchema);
+const Admin = mongoose.model("Admin", adminSchema);
 
-module.exports = User;
+module.exports = Admin;
