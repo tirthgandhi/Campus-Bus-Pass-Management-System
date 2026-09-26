@@ -2,7 +2,6 @@
 
 A full-stack campus bus pass management system divided among 4 team members with clear separation of concerns.
 
----
 
 ## Project Structure
 
@@ -27,7 +26,6 @@ Campus-Bus-Pass-Management-System/
 └── README.md
 ```
 
----
 
 ## Team Member Responsibilities
 
@@ -38,22 +36,14 @@ Campus-Bus-Pass-Management-System/
 | **Driver** | `frontend/driver/` | `backend/driver/` |
 | **Admin** | `frontend/admin/` | `backend/admin/` |
 
----
 
 ## Tech Stack
 
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB with Mongoose
-- **Authentication**: JWT (JSON Web Tokens) + bcrypt
-- **Email**: Nodemailer (Gmail)
 
----
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js v18+
-- MongoDB (local or Atlas)
 
 ### Setup
 
@@ -87,7 +77,6 @@ npm start
 
 Server will run at: `http://localhost:5000`
 
----
 
 ## API Endpoints
 
@@ -135,7 +124,6 @@ Server will run at: `http://localhost:5000`
 | PUT | `/api/admin/routes/:id` | Update route |
 | DELETE | `/api/admin/routes/:id` | Delete route |
 
----
 
 ## Database Models
 
@@ -150,7 +138,6 @@ Located in `backend/database/models/`:
 | `Attendance.js` | Daily attendance records per student per bus |
 | `Payment.js` | Student payment records |
 
----
 
 ## Authentication
 
