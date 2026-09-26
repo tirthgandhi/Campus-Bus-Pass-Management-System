@@ -3,7 +3,11 @@ const dotenv = require("dotenv");
 const path = require("path");
 const cors = require("cors");
 
-// Load .env FIRST — located at repo root (one level above backend/)
+// Load .env FIRST. Support both local backend/.env and a repository-root .env.
+dotenv.config({
+    path: path.join(__dirname, ".env")
+});
+
 dotenv.config({
     path: path.join(__dirname, "..", ".env")
 });

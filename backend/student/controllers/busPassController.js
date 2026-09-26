@@ -1,105 +1,88 @@
-const BusPass = require("../../database/models/BusPass");
-const Payment = require("../../database/models/Payment");
-const Bus = require("../../database/models/Bus");
+const Student = require("../../database/models/Student");
+const BusAssignment = require("../../database/models/BusAssignment");
 
 const createBusPass = async (req, res) => {
     try {
-        const { busId, validFrom, validUntil } = req.body;
+        const student = await Student.findOne({ userId: req.user.userId });
 
-        if (!busId || !validFrom || !validUntil) {
-            return res.status(400).json({
-                message: "busId, validFrom and validUntil are required"
-            });
-        }
-
-        // Check that the bus exists
-        const bus = await Bus.findById(busId);
-
-        if (!bus) {
+        if (!student) {
             return res.status(404).json({
-                message: "Bus not found"
+                message: "Student profile not found"
             });
         }
 
-        // Find a successful payment made by this student
-        const payment = await Payment.findOne({
-            student: req.user.userId,
-            paymentStatus: "paid"
-        }).sort({ createdAt: -1 });
-
-        if (!payment) {
-            return res.status(400).json({
-                message: "No successful payment found"
-            });
-        }
-
-        // Check if student already has an active pass
-        const existingPass = await BusPass.findOne({
-            student: req.user.userId,
+        const assignment = await BusAssignment.findOne({
+            student: student._id,
             status: "active"
-        });
+        })
+            .populate("bus")
+            .populate("route")
+            .populate("pickupPoint");
 
-        if (existingPass) {
-            return res.status(400).json({
-                message: "Student already has an active bus pass",
-                busPass: existingPass
+        if (!assignment) {
+            return res.status(404).json({
+                message: "No active bus assignment found for this student"
             });
         }
 
-        const passNumber = `PASS-${Date.now()}`;
-
-        const busPass = await BusPass.create({
-            student: req.user.userId,
-            bus: busId,
-            payment: payment._id,
-            passNumber,
-            validFrom,
-            validUntil,
-            status: "active"
-        });
-
-        res.status(201).json({
-            message: "Bus pass created successfully",
-            busPass
+        return res.status(200).json({
+            message: "Bus pass details retrieved successfully",
+            busPass: {
+                busPassId: student.busPassId,
+                assignedBus: student.assignedBus,
+                assignedRoute: student.assignedRoute,
+                pickupPoint: student.pickupPoint,
+                assignment,
+                transportStatus: student.transportStatus
+            }
         });
 
     } catch (error) {
         console.error("❌ Create bus pass error:", error.message);
 
-        res.status(500).json({
-            message: "Server error while creating bus pass"
+        return res.status(500).json({
+            message: "Server error while retrieving bus pass"
         });
     }
 };
 
-
 const getMyBusPass = async (req, res) => {
     try {
-        const busPass = await BusPass.findOne({
-            student: req.user.userId
-        })
-        .populate("bus")
-        .populate("payment");
+        const student = await Student.findOne({ userId: req.user.userId });
 
-        if (!busPass) {
+        if (!student) {
             return res.status(404).json({
-                message: "No bus pass found"
+                message: "Student profile not found"
             });
         }
 
-        res.status(200).json({
-            busPass
+        const assignment = await BusAssignment.findOne({
+            student: student._id,
+            status: "active"
+        })
+            .populate("bus")
+            .populate("route")
+            .populate("pickupPoint");
+
+        return res.status(200).json({
+            busPass: {
+                busPassId: student.busPassId,
+                assignedBus: student.assignedBus,
+                assignedRoute: student.assignedRoute,
+                pickupPoint: student.pickupPoint,
+                assignment,
+                transportStatus: student.transportStatus
+            }
         });
 
     } catch (error) {
         console.error("❌ Get bus pass error:", error.message);
 
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error while fetching bus pass"
         });
     }
 };
-
 
 module.exports = {
     createBusPass,

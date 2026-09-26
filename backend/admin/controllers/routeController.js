@@ -1,4 +1,4 @@
-const BusRoute = require("../../database/models/BusRoute");
+const Route = require("../../database/models/Route");
 const Bus = require("../../database/models/Bus");
 
 const createRoute = async (req, res) => {
@@ -18,7 +18,7 @@ const createRoute = async (req, res) => {
             });
         }
 
-        const existingRoute = await BusRoute.findOne({ routeNumber });
+        const existingRoute = await Route.findOne({ routeCode: routeNumber });
 
         if (existingRoute) {
             return res.status(400).json({
@@ -36,12 +36,12 @@ const createRoute = async (req, res) => {
             }
         }
 
-        const route = await BusRoute.create({
+        const route = await Route.create({
             routeName,
-            routeNumber,
+            routeCode: routeNumber,
             startPoint,
             endPoint,
-            stops: stops || [],
+            pickupPoints: stops || [],
             assignedBus: assignedBus || null
         });
 
@@ -62,7 +62,7 @@ const createRoute = async (req, res) => {
 
 const getRoutes = async (req, res) => {
     try {
-        const routes = await BusRoute
+        const routes = await Route
             .find()
             .populate("assignedBus")
             .sort({ createdAt: -1 });
@@ -84,9 +84,12 @@ const getRoutes = async (req, res) => {
 
 const updateRoute = async (req, res) => {
     try {
-        const route = await BusRoute.findByIdAndUpdate(
+        const route = await Route.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            {
+                ...req.body,
+                ...(req.body.routeNumber && { routeCode: req.body.routeNumber })
+            },
             {
                 new: true,
                 runValidators: true
@@ -116,7 +119,7 @@ const updateRoute = async (req, res) => {
 
 const deleteRoute = async (req, res) => {
     try {
-        const route = await BusRoute.findByIdAndDelete(req.params.id);
+        const route = await Route.findByIdAndDelete(req.params.id);
 
         if (!route) {
             return res.status(404).json({

@@ -1,60 +1,102 @@
-const BusPass = require("../../database/models/BusPass");
+const TransportRequest = require("../../database/models/TransportRequest");
+const Student = require("../../database/models/Student");
+const PickupPoint = require("../../database/models/PickupPoint");
+const Route = require("../../database/models/Route");
 
-// Apply for a bus pass (transport request)
 const applyForPass = async (req, res) => {
     try {
-        const existingPass = await BusPass.findOne({
-            user: req.user.userId,
-            status: { $in: ["pending", "approved"] }
-        });
+        const { pickupPointId, requestedRouteId } = req.body;
 
-        if (existingPass) {
+        if (!pickupPointId || !requestedRouteId) {
             return res.status(400).json({
-                message: "You already have an active or pending bus pass"
+                message: "pickupPointId and requestedRouteId are required"
             });
         }
 
-        const pass = await BusPass.create({
-            user: req.user.userId,
+        const student = await Student.findOne({ userId: req.user.userId });
+
+        if (!student) {
+            return res.status(404).json({
+                message: "Student profile not found"
+            });
+        }
+
+        const pickupPoint = await PickupPoint.findById(pickupPointId);
+        if (!pickupPoint) {
+            return res.status(404).json({
+                message: "Pickup point not found"
+            });
+        }
+
+        const route = await Route.findById(requestedRouteId);
+        if (!route) {
+            return res.status(404).json({
+                message: "Route not found"
+            });
+        }
+
+        const existingRequest = await TransportRequest.findOne({
+            student: student._id,
             status: "pending"
         });
 
-        res.status(201).json({
-            message: "Bus pass application submitted successfully",
-            pass
+        if (existingRequest) {
+            return res.status(400).json({
+                message: "You already have a pending transport request"
+            });
+        }
+
+        const request = await TransportRequest.create({
+            student: student._id,
+            pickupPoint: pickupPointId,
+            requestedRoute: requestedRouteId,
+            status: "pending"
+        });
+
+        return res.status(201).json({
+            message: "Transport request submitted successfully",
+            request
         });
 
     } catch (error) {
         console.error("❌ Apply for pass error:", error.message);
 
-        res.status(500).json({
-            message: "Server error while applying for bus pass"
+        return res.status(500).json({
+            message: "Server error while applying for transport"
         });
     }
 };
 
-
-// Get logged-in student's passes
 const getMyPasses = async (req, res) => {
     try {
-        const passes = await BusPass.find({
-            user: req.user.userId
-        }).sort({ createdAt: -1 });
+        const student = await Student.findOne({ userId: req.user.userId });
 
-        res.status(200).json({
-            count: passes.length,
-            passes
+        if (!student) {
+            return res.status(404).json({
+                message: "Student profile not found"
+            });
+        }
+
+        const requests = await TransportRequest.find({
+            student: student._id
+        })
+            .populate("pickupPoint")
+            .populate("requestedRoute")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            count: requests.length,
+            requests
         });
 
     } catch (error) {
         console.error("❌ Get passes error:", error.message);
 
-        res.status(500).json({
-            message: "Server error while fetching passes"
+        return res.status(500).json({
+            message: "Server error while fetching transport requests"
         });
     }
 };
-
 
 module.exports = {
     applyForPass,
