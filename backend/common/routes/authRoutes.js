@@ -3,38 +3,50 @@ const router = express.Router();
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 const {
+  signup,
+  login,
+  getMe,
   registerUser,
   verifyEmail,
   loginUser,
-  getMe,
   resetDriverPassword,
 } = require("../controllers/authController");
 
-// ── Public routes ─────────────────────────────────────────────────────────────
+// ── Health check ──────────────────────────────────────────────────────────────
 router.get("/test", (req, res) => {
-  res.json({ message: "Authentication route is working ✅" });
+  res.json({ success: true, message: "Authentication route is working ✅" });
 });
 
-// POST /api/auth/register  → signup
-router.post("/register", registerUser);
-// Alias kept for spec compatibility
-router.post("/signup", registerUser);
+// ═══════════════════════════════════════════════════════════════════════════════
+// ISSUE #1 — SPEC ROUTES  (used for Postman tests)
+// ═══════════════════════════════════════════════════════════════════════════════
 
-// GET  /api/auth/verify-email?token=...
-router.get("/verify-email", verifyEmail);
+// POST /api/auth/signup  → register + return token immediately
+router.post("/signup", signup);
 
-// POST /api/auth/login
-router.post("/login", loginUser);
+// POST /api/auth/login   → login, no email-verification gate
+router.post("/login", login);
 
-// POST /api/auth/reset-driver-password  (admin operation — no auth guard yet)
-router.post("/reset-driver-password", resetDriverPassword);
-
-// ── Protected routes ──────────────────────────────────────────────────────────
-
-// GET /api/auth/me  → returns current logged-in user
+// GET  /api/auth/me      → return current logged-in user (protected)
 router.get("/me", protect, getMe);
 
-// Role-specific example routes
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXTENDED FLOW — Email verification (register → verify → login-verified)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// POST /api/auth/register      → register, sends verification email
+router.post("/register", registerUser);
+
+// GET  /api/auth/verify-email  → verify email token from inbox
+router.get("/verify-email", verifyEmail);
+
+// POST /api/auth/login-verified → login only after email is verified
+router.post("/login-verified", loginUser);
+
+// POST /api/auth/reset-driver-password
+router.post("/reset-driver-password", resetDriverPassword);
+
+// ── Role-gated demo routes (for team reference) ───────────────────────────────
 router.get("/student-only", protect, authorize("student"), (req, res) => {
   res.json({ success: true, message: "Welcome, student!", user: req.user });
 });
@@ -43,13 +55,8 @@ router.get("/admin-only", protect, authorize("admin"), (req, res) => {
   res.json({ success: true, message: "Welcome, admin!", user: req.user });
 });
 
-router.get(
-  "/driver-only",
-  protect,
-  authorize("driver"),
-  (req, res) => {
-    res.json({ success: true, message: "Welcome, driver!", user: req.user });
-  }
-);
+router.get("/driver-only", protect, authorize("driver"), (req, res) => {
+  res.json({ success: true, message: "Welcome, driver!", user: req.user });
+});
 
 module.exports = router;

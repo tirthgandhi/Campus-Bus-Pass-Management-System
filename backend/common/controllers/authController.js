@@ -4,6 +4,90 @@ const generateToken = require("../utils/generateToken");
 const { sendVerificationEmail } = require("../utils/email");
 
 // ────────────────────────────────────────────────────────────────────────────
+// @route   POST /api/auth/signup
+// @desc    Register user and immediately return JWT token (no email gate)
+// @access  Public
+// ────────────────────────────────────────────────────────────────────────────
+const signup = async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email, password, and role are required",
+      });
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
+
+    // Password hashed by pre-save hook in User model
+    const user = await User.create({ name, email, password, role, isEmailVerified: true });
+    const token = generateToken(user._id);
+
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      data: { token, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error("❌ Signup error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// @route   POST /api/auth/login
+// @desc    Authenticate user and return JWT token (no email-verification gate)
+// @access  Public
+// ────────────────────────────────────────────────────────────────────────────
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      data: { token, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error("❌ Login error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ────────────────────────────────────────────────────────────────────────────
 // @route   POST /api/auth/register  (alias: /api/auth/signup)
 // @access  Public
 // ────────────────────────────────────────────────────────────────────────────
@@ -218,9 +302,14 @@ const resetDriverPassword = async (req, res) => {
 };
 
 module.exports = {
-  registerUser,
-  verifyEmail,
-  loginUser,
-  getMe,
-  resetDriverPassword,
+  // ── Spec-required (Issue #1) ─────────────────────────────────────────────
+  signup,          // POST /api/auth/signup  → register + immediate token
+  login,           // POST /api/auth/login   → login, no email gate
+  getMe,           // GET  /api/auth/me      → current user (protected)
+
+  // ── Extended flow (email verification) ──────────────────────────────────
+  registerUser,    // POST /api/auth/register → register, email verify required
+  verifyEmail,     // GET  /api/auth/verify-email?token=...
+  loginUser,       // POST /api/auth/login-verified → login with email gate
+  resetDriverPassword, // POST /api/auth/reset-driver-password
 };
