@@ -1,58 +1,66 @@
 const jwt = require("jsonwebtoken");
+const User = require("../../database/models/User");
 
-const protect = (req, res, next) => {
-    try {
-        // Get token from Authorization header
-        const authHeader = req.headers.authorization;
+/**
+ * protect — verifies Bearer JWT and attaches full user (no password) to req.user
+ */
+const protect = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
 
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({
-                message: "Not authorized. No token provided."
-            });
-        }
-
-        // Extract token
-        const token = authHeader.split(" ")[1];
-
-        // Verify token
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET
-        );
-
-        // Store decoded user information in request
-        req.user = decoded;
-
-        next();
-
-    } catch (error) {
-        console.error("❌ Authentication error:", error.message);
-
-        return res.status(401).json({
-            message: "Not authorized. Invalid or expired token."
-        });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized. No token provided.",
+      });
     }
+
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Attach full user object (excluding password) to req
+    req.user = await User.findById(decoded.id).select("-password");
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized. User no longer exists.",
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("❌ Authentication error:", error.message);
+    return res.status(401).json({
+      success: false,
+      message: "Not authorized. Invalid or expired token.",
+    });
+  }
 };
 
+/**
+ * authorize — role-based access control middleware
+ * @param  {...string} allowedRoles  - e.g. authorize('admin'), authorize('student', 'admin')
+ */
 const authorize = (...allowedRoles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({
-                message: "Not authenticated"
-            });
-        }
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authenticated",
+      });
+    }
 
-        if (!allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({
-                message: "Access denied. You do not have permission."
-            });
-        }
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied. Required role: ${allowedRoles.join(", ")}`,
+      });
+    }
 
-        next();
-    };
+    next();
+  };
 };
 
-module.exports = {
-    protect,
-    authorize
-};
+module.exports = { protect, authorize };
