@@ -253,7 +253,7 @@ Allocate Student                                           │
 
 ## 📂 Folder Structure
 
-```
+```text
 Campus-Bus-Pass-Management-System/
 │
 ├── 📁 frontend/
@@ -484,6 +484,9 @@ cd Campus-Bus-Pass-Management-System
 
 ```bash
 cd backend
+npm install
+
+cd ../frontend
 npm install
 ```
 
