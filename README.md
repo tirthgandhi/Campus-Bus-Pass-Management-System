@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=28&pause=1000&color=2196F3&center=true&vCenter=true&width=700&lines=🚌+Campus+Bus+Pass+Management;University+Transport+System;MERN+Stack+Web+Application" alt="Typing SVG" />
+
 
 # 🚌 Campus Bus Pass Management System
 
