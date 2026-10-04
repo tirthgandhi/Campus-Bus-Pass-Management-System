@@ -1,0 +1,202 @@
+/* ── Auth Page ── */
+.ac-page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+/* ── Card ── */
+.ac-card {
+  background: var(--white);
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 36px 36px 32px;
+  box-shadow: var(--sh-lg);
+}
+
+.ac-card--wide {
+  max-width: 480px;
+}
+
+/* ── Card top row ── */
+.ac-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.ac-logo {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -0.3px;
+}
+
+.ac-back {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  background: none;
+  padding: 0;
+  transition: color 0.15s;
+}
+.ac-back:hover { color: var(--text); }
+
+/* ── Heading ── */
+.ac-heading {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.4px;
+  margin-bottom: 4px;
+}
+
+.ac-sub {
+  font-size: 14px;
+  color: var(--text-3);
+  margin-bottom: 24px;
+}
+
+/* ── Role Tabs ── */
+.ac-tabs {
+  display: flex;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  padding: 3px;
+  margin-bottom: 24px;
+  gap: 2px;
+}
+
+.ac-tab {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  background: transparent;
+  border-radius: 5px;
+  transition: all 0.15s;
+}
+.ac-tab:hover:not(.ac-tab--on) { color: var(--text); }
+.ac-tab--on {
+  background: var(--white);
+  color: var(--navy);
+  box-shadow: var(--sh);
+}
+
+/* ── Form ── */
+.ac-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ac-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ac-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ac-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.ac-field input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--white);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ac-field input::placeholder { color: var(--text-3); }
+.ac-field input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+}
+
+/* ── Password toggle ── */
+.ac-pw-wrap {
+  position: relative;
+}
+
+.ac-pw-wrap input { padding-right: 54px; }
+
+.ac-pw-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  padding: 0;
+}
+.ac-pw-toggle:hover { color: var(--navy); }
+
+/* ── Alerts ── */
+.ac-alert {
+  padding: 10px 13px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.ac-alert--err {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-bd);
+}
+.ac-alert--ok {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-bd);
+}
+
+/* ── Submit ── */
+.ac-submit {
+  width: 100%;
+  padding: 12px;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: var(--r);
+  margin-top: 2px;
+  transition: background 0.15s;
+  letter-spacing: 0.1px;
+}
+.ac-submit:hover:not(:disabled) { background: var(--navy-hover); }
+.ac-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── Footer link ── */
+.ac-foot {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: 18px;
+}
+.ac-foot span {
+  color: var(--blue);
+  font-weight: 600;
+  cursor: pointer;
+}
+.ac-foot span:hover { text-decoration: underline; }
+.ac-foot--muted { color: var(--text-3); font-style: italic; }

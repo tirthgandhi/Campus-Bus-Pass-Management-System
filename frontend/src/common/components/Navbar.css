@@ -1,0 +1,81 @@
+/* Navbar.css */
+
+.navbar {
+  height: 56px;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.3px;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navbar-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar-username {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+/* Role badge — base */
+.navbar-role-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.navbar-role-badge--student {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+
+.navbar-role-badge--driver {
+  background: #F0FDF4;
+  color: #15803D;
+}
+
+.navbar-role-badge--admin {
+  background: #FFF7ED;
+  color: #C2410C;
+}
+
+/* Sign out button */
+.navbar-logout {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.navbar-logout:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
