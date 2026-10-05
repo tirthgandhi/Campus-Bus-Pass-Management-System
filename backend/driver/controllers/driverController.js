@@ -1,377 +1,57 @@
-const Driver = require("../../database/models/Driver");
-const Bus = require("../../database/models/Bus");
-const Route = require("../../database/models/Route");
-const PickupPoint = require("../../database/models/PickupPoint");
-const Student = require("../../database/models/Student");
-const BusAssignment = require("../../database/models/BusAssignment");
-const Attendance = require("../../database/models/Attendance");
-const BusProblem = require("../../database/models/BusProblem");
-
-const getDriverDashboard = async (req, res) => {
-  try {
-    const driver = await Driver.findOne({ userId: req.user.userId }).populate("assignedBus").populate("assignedRoute");
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    return res.status(200).json({
-      driver,
-      assignedBus: driver.assignedBus || null,
-      assignedRoute: driver.assignedRoute || null,
-    });
-  } catch (error) {
-    console.error("Get driver dashboard error:", error.message);
-    return res.status(500).json({ message: "Server error while fetching driver dashboard" });
-  }
+const Bus = require('../../database/models/Bus');
+const Route = require('../../database/models/Route');
+const PickupPoint = require('../../database/models/PickupPoint');
+const BusAssignment = require('../../database/models/BusAssignment');
+const Attendance = require('../../database/models/Attendance');
+const { ok, fail, text, day, sameId, found } = require('../../common/utils/http');
+async function assignedBus(driver) {
+  const bus = found(await Bus.findById(driver.assignedBus), 'Assigned bus');
+  if (!sameId(bus.assignedDriver, driver)) fail(403, 'Bus is not assigned to this driver.');
+  return bus;
+}
+async function assignedRoute(driver) {
+  const route = found(await Route.findById(driver.assignedRoute).populate('pickupPoints'), 'Assigned route');
+  if (!sameId(route.assignedDriver, driver) || !sameId(route.assignedBus, driver.assignedBus)) fail(403, 'Route is not assigned to this driver and bus.');
+  return route;
+}
+async function verify(driver, value) {
+  const busPassId = text(value, 'Bus Pass ID', { max: 100 });
+  const assignment = await BusAssignment.findOne({ busPassId, status: 'active', bus: driver.assignedBus, route: driver.assignedRoute }).populate('student bus route pickupPoint');
+  if (!assignment) fail(404, 'No active bus pass was found for your assigned bus and route.');
+  if (!assignment.student || assignment.student.transportStatus !== 'approved' || assignment.bus?.status !== 'active' || assignment.route?.status !== 'active') fail(409, 'This transport assignment is not available.');
+  if (!sameId(assignment.bus.assignedDriver, driver) || !sameId(assignment.route.assignedDriver, driver)) fail(403, 'This transport assignment is not available to you.');
+  return assignment;
+}
+exports.getProfile = (req, res) => ok(res, req.account);
+exports.getDriverDashboard = async (req, res) => {
+  const driver = req.account;
+  const bus = driver.assignedBus ? await assignedBus(driver) : null;
+  const route = driver.assignedRoute ? await assignedRoute(driver) : null;
+  const students = bus && route ? await BusAssignment.countDocuments({ bus: bus._id, route: route._id, status: 'active' }) : 0;
+  const todayAttendance = await Attendance.countDocuments({ driver: driver._id, date: day() });
+  return ok(res, { driver, bus, route, assignedStudents: students, todayAttendance });
 };
-
-const getAssignedBus = async (req, res) => {
-  try {
-    const driver = await Driver.findOne({ userId: req.user.userId }).populate("assignedBus");
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    if (!driver.assignedBus) {
-      return res.status(404).json({ message: "No bus assigned to this driver" });
-    }
-
-    return res.status(200).json({ bus: driver.assignedBus });
-  } catch (error) {
-    console.error("Get assigned bus error:", error.message);
-    return res.status(500).json({ message: "Server error while fetching assigned bus" });
-  }
+exports.getAssignedBus = async (req, res) => ok(res, req.account.assignedBus ? await assignedBus(req.account) : null);
+exports.getAssignedRoute = async (req, res) => ok(res, req.account.assignedRoute ? await assignedRoute(req.account) : null);
+exports.getAssignedRoutePickupPoints = async (req, res) => {
+  if (!req.account.assignedRoute) return ok(res, []);
+  await assignedRoute(req.account);
+  return ok(res, await PickupPoint.find({ route: req.account.assignedRoute, status: 'active' }).sort({ sequence: 1 }));
 };
-
-const getAssignedRoute = async (req, res) => {
-  try {
-    const driver = await Driver.findOne({ userId: req.user.userId }).populate("assignedRoute");
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    if (!driver.assignedRoute) {
-      return res.status(404).json({ message: "No route assigned to this driver" });
-    }
-
-    return res.status(200).json({ route: driver.assignedRoute });
-  } catch (error) {
-    console.error("Get assigned route error:", error.message);
-    return res.status(500).json({ message: "Server error while fetching assigned route" });
-  }
+exports.getAssignedStudents = async (req, res) => {
+  if (!req.account.assignedBus || !req.account.assignedRoute) return ok(res, []);
+  await assignedBus(req.account); await assignedRoute(req.account);
+  return ok(res, await BusAssignment.find({ bus: req.account.assignedBus, route: req.account.assignedRoute, status: 'active' }).populate('student pickupPoint'));
 };
-
-const getAssignedRoutePickupPoints = async (req, res) => {
-  try {
-    const driver = await Driver.findOne({ userId: req.user.userId });
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    if (!driver.assignedRoute) {
-      return res.status(404).json({ message: "No route assigned to this driver" });
-    }
-
-    const route = await Route.findById(driver.assignedRoute).populate("pickupPoints");
-
-    if (!route) {
-      return res.status(404).json({ message: "Assigned route not found" });
-    }
-
-    return res.status(200).json({
-      route,
-      pickupPoints: route.pickupPoints || [],
-    });
-  } catch (error) {
-    console.error("Get route pickup points error:", error.message);
-    return res.status(500).json({ message: "Server error while fetching route pickup points" });
-  }
+exports.verifyBusPassId = async (req, res) => ok(res, await verify(req.account, req.body.busPassId), 'Bus pass verified');
+exports.markAttendance = async (req, res) => {
+  const assignment = await verify(req.account, req.body.busPassId);
+  const date = day();
+  if (req.body.date && day(req.body.date).getTime() !== date.getTime()) fail(400, 'Attendance can only be marked for today.');
+  const status = req.body.status || 'present';
+  if (!['present', 'absent'].includes(status)) fail(400, 'Choose present or absent.');
+  if (await Attendance.exists({ student: assignment.student._id, date })) fail(409, 'Attendance has already been recorded for this student today.');
+  const attendance = await Attendance.create({ student: assignment.student._id, driver: req.user.id, bus: assignment.bus._id, route: assignment.route._id, pickupPoint: assignment.pickupPoint._id, busPassId: assignment.busPassId, date, status, boardingTime: status === 'present' ? new Date() : null });
+  return ok(res, attendance, 'Attendance recorded', 201);
 };
-
-const getAssignedStudents = async (req, res) => {
-  try {
-    const driver = await Driver.findOne({ userId: req.user.userId });
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    if (!driver.assignedBus || !driver.assignedRoute) {
-      return res.status(404).json({ message: "Bus and route not assigned to this driver" });
-    }
-
-    const assignments = await BusAssignment.find({
-      bus: driver.assignedBus,
-      route: driver.assignedRoute,
-      status: "active",
-    })
-      .populate("student")
-      .populate("pickupPoint")
-      .sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      count: assignments.length,
-      assignments,
-    });
-  } catch (error) {
-    console.error("Get assigned students error:", error.message);
-    return res.status(500).json({ message: "Server error while fetching assigned students" });
-  }
-};
-
-const verifyBusPassId = async (req, res) => {
-  try {
-    const { busPassId } = req.body;
-
-    if (!busPassId || !busPassId.trim()) {
-      return res.status(400).json({ message: "busPassId is required" });
-    }
-
-    const driver = await Driver.findOne({ userId: req.user.userId });
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    if (!driver.assignedBus || !driver.assignedRoute) {
-      return res.status(404).json({ message: "No bus or route assigned to this driver" });
-    }
-
-    const student = await Student.findOne({ busPassId: busPassId.trim() });
-
-    if (!student) {
-      return res.status(404).json({ message: "Invalid bus pass ID" });
-    }
-
-    const assignment = await BusAssignment.findOne({
-      student: student._id,
-      bus: driver.assignedBus,
-      route: driver.assignedRoute,
-      status: "active",
-    }).populate("student").populate("pickupPoint");
-
-    if (!assignment) {
-      return res.status(403).json({
-        message: "This student is not assigned to your bus and route",
-      });
-    }
-
-    return res.status(200).json({
-      message: "Bus pass verified successfully",
-      student,
-      assignment,
-    });
-  } catch (error) {
-    console.error("Verify bus pass error:", error.message);
-    return res.status(500).json({ message: "Server error while verifying bus pass" });
-  }
-};
-
-const markAttendance = async (req, res) => {
-  try {
-    const { busPassId, status, date } = req.body;
-
-    if (!busPassId || !busPassId.trim()) {
-      return res.status(400).json({ message: "busPassId is required" });
-    }
-
-    if (!status || !["present", "absent"].includes(status)) {
-      return res.status(400).json({ message: "Valid status is required" });
-    }
-
-    const driver = await Driver.findOne({ userId: req.user.userId });
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    if (!driver.assignedBus || !driver.assignedRoute) {
-      return res.status(404).json({ message: "No bus or route assigned to this driver" });
-    }
-
-    const student = await Student.findOne({ busPassId: busPassId.trim() });
-
-    if (!student) {
-      return res.status(404).json({ message: "Invalid bus pass ID" });
-    }
-
-    const assignment = await BusAssignment.findOne({
-      student: student._id,
-      bus: driver.assignedBus,
-      route: driver.assignedRoute,
-      status: "active",
-    });
-
-    if (!assignment) {
-      return res.status(403).json({
-        message: "This student is not assigned to your bus and route",
-      });
-    }
-
-    const attendanceDate = date ? new Date(date) : new Date();
-    attendanceDate.setHours(0, 0, 0, 0);
-
-    const duplicateAttendance = await Attendance.findOne({
-      student: student._id,
-      bus: driver.assignedBus,
-      route: driver.assignedRoute,
-      date: attendanceDate,
-    });
-
-    if (duplicateAttendance) {
-      return res.status(409).json({
-        message: "Attendance already recorded for this student on this date and trip",
-      });
-    }
-
-    const attendance = await Attendance.create({
-      student: student._id,
-      bus: driver.assignedBus,
-      route: driver.assignedRoute,
-      pickupPoint: assignment.pickupPoint,
-      busPassId: busPassId.trim(),
-      date: attendanceDate,
-      boardingTime: status === "present" ? new Date() : null,
-      markedBy: driver._id,
-      status,
-    });
-
-    return res.status(201).json({
-      message: `Student marked ${status}`,
-      attendance,
-    });
-  } catch (error) {
-    console.error("Mark attendance error:", error.message);
-    return res.status(500).json({ message: "Server error while marking attendance" });
-  }
-};
-
-const getTodayAttendance = async (req, res) => {
-  try {
-    const driver = await Driver.findOne({ userId: req.user.userId });
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    if (!driver.assignedBus || !driver.assignedRoute) {
-      return res.status(404).json({ message: "No bus or route assigned to this driver" });
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const attendance = await Attendance.find({
-      bus: driver.assignedBus,
-      route: driver.assignedRoute,
-      date: {
-        $gte: today,
-        $lt: tomorrow,
-      },
-    })
-      .populate("student")
-      .populate("bus")
-      .populate("route")
-      .populate("pickupPoint")
-      .populate("markedBy")
-      .sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      date: today,
-      count: attendance.length,
-      attendance,
-    });
-  } catch (error) {
-    console.error("Get attendance error:", error.message);
-    return res.status(500).json({ message: "Server error while fetching attendance" });
-  }
-};
-
-const reportBusProblem = async (req, res) => {
-  try {
-    const { problemType, description } = req.body;
-
-    if (!problemType || !description || !description.trim()) {
-      return res.status(400).json({
-        message: "problemType and description are required",
-      });
-    }
-
-    const driver = await Driver.findOne({ userId: req.user.userId });
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    if (!driver.assignedBus || !driver.assignedRoute) {
-      return res.status(404).json({ message: "No bus or route assigned to this driver" });
-    }
-
-    const validProblemTypes = ["breakdown", "engine", "tyre", "electrical", "other"];
-
-    if (!validProblemTypes.includes(problemType)) {
-      return res.status(400).json({ message: "Invalid problemType" });
-    }
-
-    const problem = await BusProblem.create({
-      bus: driver.assignedBus,
-      driver: driver._id,
-      route: driver.assignedRoute,
-      problemType,
-      description: description.trim(),
-      reportedAt: new Date(),
-      status: "reported",
-    });
-
-    return res.status(201).json({
-      message: "Bus problem reported successfully",
-      problem,
-    });
-  } catch (error) {
-    console.error("Report bus problem error:", error.message);
-    return res.status(500).json({ message: "Server error while reporting bus problem" });
-  }
-};
-
-const getMyBusProblems = async (req, res) => {
-  try {
-    const driver = await Driver.findOne({ userId: req.user.userId });
-
-    if (!driver) {
-      return res.status(404).json({ message: "Driver not found" });
-    }
-
-    const problems = await BusProblem.find({ driver: driver._id })
-      .populate("bus")
-      .populate("route")
-      .sort({ reportedAt: -1 });
-
-    return res.status(200).json({
-      count: problems.length,
-      problems,
-    });
-  } catch (error) {
-    console.error("Get bus problems error:", error.message);
-    return res.status(500).json({ message: "Server error while fetching bus problems" });
-  }
-};
-
-module.exports = {
-  getDriverDashboard,
-  getAssignedBus,
-  getAssignedRoute,
-  getAssignedRoutePickupPoints,
-  getAssignedStudents,
-  verifyBusPassId,
-  markAttendance,
-  getTodayAttendance,
-  reportBusProblem,
-  getMyBusProblems,
-};
+exports.getTodayAttendance = async (req, res) => ok(res, await Attendance.find({ driver: req.user.id, date: day() }).populate('student bus route').sort({ markedAt: -1 }));

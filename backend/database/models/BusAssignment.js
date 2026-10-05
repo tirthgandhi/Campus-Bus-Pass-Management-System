@@ -56,6 +56,7 @@ const busAssignmentSchema = new mongoose.Schema(
   }
 );
 
+busAssignmentSchema.index({ student: 1 }, { unique: true, partialFilterExpression: { status: "active" } });
 const BusAssignment = mongoose.model("BusAssignment", busAssignmentSchema);
 
 module.exports = BusAssignment;

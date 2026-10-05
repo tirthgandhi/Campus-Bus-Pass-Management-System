@@ -52,6 +52,8 @@ const routeSchema = new mongoose.Schema(
       default: null,
     },
 
+    timings: { type: String, trim: true, default: "" },
+
     status: {
       type: String,
       enum: ["active", "inactive"],

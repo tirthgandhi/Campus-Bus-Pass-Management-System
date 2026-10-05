@@ -1,64 +1,14 @@
-const mongoose = require("mongoose");
-
-const driverSchema = new mongoose.Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      unique: true,
-    },
-
-    driverId: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    phone: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    licenseNumber: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-
-    assignedBus: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Bus",
-      default: null,
-    },
-
-    assignedRoute: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Route",
-      default: null,
-    },
-
-    status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "active",
-      required: true,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-const Driver = mongoose.model("Driver", driverSchema);
-
-module.exports = Driver;
+const mongoose = require('mongoose');
+const { addAuthentication, emailField, phoneField, identifier } = require('../helpers/account');
+const schema = new mongoose.Schema({
+  driverId: identifier('DRV'),
+  name: { type: String, required: true, trim: true },
+  email: emailField(),
+  phone: phoneField(),
+  licenseNumber: { type: String, required: true, unique: true, trim: true, uppercase: true },
+  assignedBus: { type: mongoose.Schema.Types.ObjectId, ref: 'Bus', default: null },
+  assignedRoute: { type: mongoose.Schema.Types.ObjectId, ref: 'Route', default: null },
+  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+}, { timestamps: true });
+addAuthentication(schema);
+module.exports = mongoose.model('Driver', schema);

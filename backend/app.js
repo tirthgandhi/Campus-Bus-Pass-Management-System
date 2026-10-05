@@ -1,0 +1,15 @@
+const express = require('express');
+const cors = require('cors');
+const { errorHandler, ok } = require('./common/utils/http');
+const app = express();
+app.use(cors());
+app.use(express.json({ limit: '32kb' }));
+app.use((req, res, next) => { req.body ??= {}; next(); });
+app.use('/api/auth', require('./common/routes/authRoutes'));
+app.use('/api/admin', require('./admin/adminRoutes'));
+app.use('/api/driver', require('./driver/driverRoutes'));
+app.use('/api/student', require('./student/studentRoutes'));
+app.get('/', (req, res) => ok(res, {}, 'Campus Bus backend is running'));
+app.use((req, res) => res.status(404).json({ success: false, message: 'Endpoint not found.' }));
+app.use(errorHandler);
+module.exports = app;

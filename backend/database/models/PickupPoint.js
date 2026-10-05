@@ -30,7 +30,10 @@ const pickupPointSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 1,
+      validate: Number.isInteger,
     },
+
+    pickupTime: { type: String, trim: true, match: /^([01]\d|2[0-3]):[0-5]\d$/ },
 
     status: {
       type: String,
@@ -44,6 +47,7 @@ const pickupPointSchema = new mongoose.Schema(
   }
 );
 
+pickupPointSchema.index({ route: 1, sequence: 1 }, { unique: true });
 const PickupPoint = mongoose.model("PickupPoint", pickupPointSchema);
 
 module.exports = PickupPoint;

@@ -1,66 +1,26 @@
-const jwt = require("jsonwebtoken");
-const User = require("../../database/models/User");
-
-/**
- * protect — verifies Bearer JWT and attaches full user (no password) to req.user
- */
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const { models, identity } = require('../services/accounts');
 const protect = async (req, res, next) => {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) return res.status(401).json({ success: false, message: 'Please sign in to continue.' });
+  let decoded;
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized. No token provided.",
-      });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Attach full user object (excluding password) to req
-    req.user = await User.findById(decoded.id).select("-password");
-
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized. User no longer exists.",
-      });
-    }
-
+    decoded = jwt.verify(header.slice(7), process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    if (!Object.hasOwn(models, decoded.role) || !mongoose.isObjectIdOrHexString(decoded.id)) throw new Error('Invalid identity');
+  } catch { return res.status(401).json({ success: false, message: 'Invalid or expired session. Please sign in again.' }); }
+  try {
+    const account = await models[decoded.role].findById(decoded.id);
+    if (!account) return res.status(401).json({ success: false, message: 'Account no longer exists. Please sign in again.' });
+    if (account.status === 'inactive' || account.transportStatus === 'inactive') return res.status(403).json({ success: false, message: 'This account is inactive.' });
+    req.account = account;
+    req.user = { ...identity(account, decoded.role), id: String(account._id) };
     next();
-  } catch (error) {
-    console.error("❌ Authentication error:", error.message);
-    return res.status(401).json({
-      success: false,
-      message: "Not authorized. Invalid or expired token.",
-    });
-  }
+  } catch (error) { next(error); }
 };
-
-/**
- * authorize — role-based access control middleware
- * @param  {...string} allowedRoles  - e.g. authorize('admin'), authorize('student', 'admin')
- */
-const authorize = (...allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authenticated",
-      });
-    }
-
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: `Access denied. Required role: ${allowedRoles.join(", ")}`,
-      });
-    }
-
-    next();
-  };
+const authorize = (...roles) => (req, res, next) => {
+  if (!req.user) return res.status(401).json({ success: false, message: 'Please sign in to continue.' });
+  if (!roles.includes(req.user.role)) return res.status(403).json({ success: false, message: 'You do not have permission to access this page.' });
+  next();
 };
-
 module.exports = { protect, authorize };

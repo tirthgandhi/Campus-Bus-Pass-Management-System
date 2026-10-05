@@ -1,30 +1,16 @@
-const express = require("express");
-const { protect, authorize } = require("../common/middleware/authMiddleware");
-
-const {
-  getDriverDashboard,
-  getAssignedBus,
-  getAssignedRoute,
-  getAssignedRoutePickupPoints,
-  getAssignedStudents,
-  verifyBusPassId,
-  markAttendance,
-  getTodayAttendance,
-  reportBusProblem,
-  getMyBusProblems,
-} = require("./controllers/driverController");
-
+const express = require('express');
+const { protect, authorize } = require('../common/middleware/authMiddleware');
+const { wrap } = require('../common/utils/http');
+const controller = require('./controllers/driverController');
 const router = express.Router();
-
-router.get("/dashboard", protect, authorize("driver"), getDriverDashboard);
-router.get("/bus", protect, authorize("driver"), getAssignedBus);
-router.get("/route", protect, authorize("driver"), getAssignedRoute);
-router.get("/route/pickup-points", protect, authorize("driver"), getAssignedRoutePickupPoints);
-router.get("/students", protect, authorize("driver"), getAssignedStudents);
-router.post("/verify-bus-pass", protect, authorize("driver"), verifyBusPassId);
-router.post("/attendance", protect, authorize("driver"), markAttendance);
-router.get("/attendance/today", protect, authorize("driver"), getTodayAttendance);
-router.post("/bus-problems", protect, authorize("driver"), reportBusProblem);
-router.get("/bus-problems", protect, authorize("driver"), getMyBusProblems);
-
+router.use(protect, authorize('driver'));
+router.get('/profile', wrap(controller.getProfile));
+router.get('/dashboard', wrap(controller.getDriverDashboard));
+router.get('/bus', wrap(controller.getAssignedBus));
+router.get('/route', wrap(controller.getAssignedRoute));
+router.get('/route/pickup-points', wrap(controller.getAssignedRoutePickupPoints));
+router.get('/students', wrap(controller.getAssignedStudents));
+router.post('/verify-bus-pass', wrap(controller.verifyBusPassId));
+router.post('/attendance', wrap(controller.markAttendance));
+router.get('/attendance/today', wrap(controller.getTodayAttendance));
 module.exports = router;

@@ -54,6 +54,10 @@ const transportRequestSchema = new mongoose.Schema(
   }
 );
 
+transportRequestSchema.index({ student: 1 }, {
+  unique: true,
+  partialFilterExpression: { status: { $in: ["pending", "approved"] } },
+});
 const TransportRequest = mongoose.model("TransportRequest", transportRequestSchema);
 
 module.exports = TransportRequest;

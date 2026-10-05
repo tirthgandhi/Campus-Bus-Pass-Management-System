@@ -1,55 +1,22 @@
-import axios from 'axios';
+import api from './api.js';
+export { getApiError } from './api.js';
 
-const BASE_URL = 'http://localhost:5000/api/auth';
-
-/**
- * Login an existing user
- * @param {string} email
- * @param {string} password
- * @returns {Promise} API response data
- */
-export const loginUser = async (email, password) => {
-  const res = await axios.post(`${BASE_URL}/login`, { email, password });
-  return res.data;
+export const loginUser = async (email, password, role, options = {}) => {
+  const response = await api.post('/auth/login', { email, password, role }, { skipAuth: true, signal: options.signal });
+  return response.data;
 };
-
-/**
- * Register a new student or driver account
- * @param {string} firstName
- * @param {string} lastName
- * @param {string} email
- * @param {string} collegeEmail  - required for students, empty string for drivers
- * @param {string} password
- * @param {string} role          - 'student' | 'driver'
- * @returns {Promise} API response data
- */
-export const signupUser = async (
-  firstName,
-  lastName,
-  email,
-  collegeEmail,
-  password,
-  role,
-) => {
-  const res = await axios.post(`${BASE_URL}/signup`, {
-    firstName,
-    lastName,
-    email,
-    collegeEmail,
-    password,
-    role,
-  });
-  return res.data;
+export const signupUser = async (values, options = {}) => {
+  const { name, email, password, role, phone, studentId, department, licenseNumber } = values;
+  if (!['student', 'driver'].includes(role)) {
+    const error = new Error('Public registration is limited to students and drivers.');
+    error.code = 'INVALID_REGISTRATION_ROLE';
+    throw error;
+  }
+  const payload = { name, password, role, phone: phone?.trim(), ...(role === 'student' ? { collegeEmail: email, studentId: studentId?.trim(), department: department?.trim() } : { email, licenseNumber: licenseNumber?.trim() }) };
+  const response = await api.post('/auth/signup', payload, { skipAuth: true, signal: options.signal });
+  return response.data;
 };
-
-/**
- * Fetch current authenticated user info
- * @param {string} token - JWT token
- * @returns {Promise} API response data
- */
-export const getMe = async (token) => {
-  const res = await axios.get(`${BASE_URL}/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return res.data;
+export const getMe = async (token, options = {}) => {
+  const response = await api.get('/auth/me', { authToken: token, signal: options.signal });
+  return response.data;
 };

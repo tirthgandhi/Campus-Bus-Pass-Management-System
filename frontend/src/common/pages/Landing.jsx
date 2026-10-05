@@ -1,187 +1,24 @@
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import PublicNavbar from '../components/PublicNavbar';
+import Footer from '../components/Footer';
+import Icon from '../components/Icon';
+import CampusIllustration from '../components/CampusIllustration';
 import './Landing.css';
 
-const features = [
-  {
-    title: 'Digital Bus Pass',
-    desc: 'Every student gets a unique permanent Bus Pass ID after approval. No paper, no hassle.',
-  },
-  {
-    title: 'Route Management',
-    desc: 'Admins create and manage routes, buses, and pickup points from one dashboard.',
-  },
-  {
-    title: 'Live Attendance',
-    desc: 'Drivers verify pass IDs and mark attendance in seconds — no paperwork required.',
-  },
-  {
-    title: 'Transport Requests',
-    desc: 'Students apply for transport online. Admins approve or reject with a reason.',
-  },
-  {
-    title: 'Role Based Portals',
-    desc: 'Separate, secure dashboards for students, drivers, and administrators.',
-  },
-  {
-    title: 'Problem Reporting',
-    desc: 'Drivers report bus issues instantly. Admin tracks and resolves them centrally.',
-  },
-];
-
 const portals = [
-  {
-    role: 'Student',
-    points: [
-      'Submit a transport request',
-      'Get assigned a bus and route',
-      'Receive your permanent Bus Pass ID',
-      'Track your attendance history',
-    ],
-  },
-  {
-    role: 'Driver',
-    points: [
-      'View your assigned bus and route',
-      'See all students on your bus',
-      'Verify Bus Pass IDs at boarding',
-      'Report bus problems to admin',
-    ],
-  },
-  {
-    role: 'Admin',
-    points: [
-      'Manage buses, routes and drivers',
-      'Approve or reject student requests',
-      'Allocate students and generate passes',
-      'Monitor attendance and reports',
-    ],
-  },
+  { role: 'student', label: 'Student', icon: 'graduation', description: 'Submit transport requests and access assigned bus and route information.' },
+  { role: 'driver', label: 'Driver', icon: 'bus', description: 'Access assigned bus, routes and student transportation information.' },
+  { role: 'admin', label: 'Admin / Facility', icon: 'building', description: 'Manage university transportation operations from one centralized system.' },
 ];
+const steps = [ ['Submit a request', 'Student submits a transport request.'], ['Review the request', 'Admin reviews the request.'], ['Assign transport', 'Bus and route are assigned.'], ['Access your details', 'Student accesses transportation details.'] ];
+const benefits = [ ['layout', 'Centralized Management', 'All transportation information is managed through one system.'], ['route', 'Clear Assignments', 'Students and drivers can access their assigned transportation information.'], ['shield', 'Role-Based Access', 'Each user accesses only the functionality relevant to their role.'] ];
 
-const Landing = () => {
-  const navigate = useNavigate();
-
-  const scrollToFeatures = () => {
-    document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
-  };
-
-  return (
-    <div className="landing">
-
-      {/* ── NAVBAR ── */}
-      <nav className="ln-nav">
-        <span className="ln-nav-logo">CampusBus</span>
-        <div className="ln-nav-actions">
-          <button className="ln-nav-login"  onClick={() => navigate('/login')}>
-            Log in
-          </button>
-          <button className="ln-nav-signup" onClick={() => navigate('/signup')}>
-            Sign up
-          </button>
-        </div>
-      </nav>
-
-      {/* ── HERO ── */}
-      <section className="ln-hero">
-        <div className="ln-hero-inner">
-          <p className="ln-hero-tag">University Transport Management</p>
-          <h1 className="ln-hero-h1">
-            The smarter way to<br />manage campus buses
-          </h1>
-          <p className="ln-hero-sub">
-            One platform connecting students, drivers, and administrators —
-            from bus pass requests to daily attendance.
-          </p>
-          <div className="ln-hero-btns">
-            <button className="btn-white"   onClick={() => navigate('/signup')}>
-              Get Started
-            </button>
-            <button className="btn-ghost"   onClick={scrollToFeatures}>
-              Learn More
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── STATS BAR ── */}
-      <div className="ln-stats">
-        {[
-          { n: '500+', l: 'Students Registered' },
-          { n: '20+',  l: 'Drivers on Fleet'    },
-          { n: '10+',  l: 'Active Routes'        },
-          { n: '1',    l: 'Unified Platform'     },
-        ].map((s) => (
-          <div className="ln-stat" key={s.l}>
-            <span className="ln-stat-n">{s.n}</span>
-            <span className="ln-stat-l">{s.l}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* ── HOW IT WORKS ── */}
-      <section className="ln-how">
-        <div className="ln-section-inner">
-          <div className="ln-section-head">
-            <h2>Three portals. One system.</h2>
-            <p>Each role gets a dedicated workspace built for their tasks.</p>
-          </div>
-          <div className="ln-portals">
-            {portals.map((p) => (
-              <div className="ln-portal-card" key={p.role}>
-                <h3 className="ln-portal-role">{p.role}</h3>
-                <ul className="ln-portal-list">
-                  {p.points.map((pt) => (
-                    <li key={pt}>
-                      <span className="ln-check">✓</span>
-                      {pt}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURES ── */}
-      <section className="ln-features" id="features">
-        <div className="ln-section-inner">
-          <div className="ln-section-head">
-            <h2>Everything you need</h2>
-            <p>Built specifically for university bus transport operations.</p>
-          </div>
-          <div className="ln-feat-grid">
-            {features.map((f) => (
-              <div className="ln-feat-card" key={f.title}>
-                <h3>{f.title}</h3>
-                <p>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA BANNER ── */}
-      <section className="ln-cta">
-        <h2>Ready to get started?</h2>
-        <p>Join students and staff already using CampusBus.</p>
-        <div className="ln-cta-btns">
-          <button className="btn-white"        onClick={() => navigate('/signup')}>
-            Create Account
-          </button>
-          <button className="btn-ghost-light"  onClick={() => navigate('/login')}>
-            Log In
-          </button>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer className="ln-footer">
-        © 2024 CampusBus &nbsp;·&nbsp; GSFC University &nbsp;·&nbsp; Facility Department
-      </footer>
-
-    </div>
-  );
-};
-
-export default Landing;
+export default function Landing() {
+  return <div className="landing" id="home"><a className="skip-link" href="#main-content">Skip to content</a><PublicNavbar />
+    <main id="main-content">
+      <section className="hero-section"><div className="container hero-grid"><div className="hero-copy"><p className="eyebrow"><span className="eyebrow-line" />University Transportation Portal</p><h1>Campus Bus Pass<br /><span>Management System</span></h1><p className="hero-description">A centralized platform for managing student transport requests, bus assignments, routes and university transportation services.</p><div className="hero-actions"><Link to="/login" className="btn btn-primary">Access Portal <Icon name="arrow-right" size={18} /></Link><Link to="/register/student" className="btn btn-secondary">Student Registration</Link></div><p className="hero-note"><Icon name="shield" size={16} />Dedicated access for students, drivers and administrators.</p></div><CampusIllustration /></div></section>
+      <section className="portal-section container" id="portal" aria-labelledby="portal-heading"><div className="section-heading"><div><p className="eyebrow">Choose your portal</p><h2 id="portal-heading">One System. Three User Roles.</h2></div><p>Your campus transport, in one place.</p></div><div className="portal-grid">{portals.map((portal, index) => <article className="portal-card" key={portal.role}><div className="portal-card-top"><span className="portal-icon"><Icon name={portal.icon} size={24} /></span><span className="portal-index">0{index + 1}</span></div><h3>{portal.label}</h3><p>{portal.description}</p><Link className="portal-link" to={`/login?role=${portal.role}`}>{portal.role === 'admin' ? 'Admin' : portal.label} Login<Icon name="arrow-right" size={18} /></Link></article>)}</div></section>
+      <section className="how-section" id="how-it-works" aria-labelledby="how-heading"><div className="container"><div className="section-heading"><div><p className="eyebrow">A straightforward process</p><h2 id="how-heading">How the System Works</h2></div><p>From your first request to your daily commute.</p></div><ol className="steps">{steps.map(([title, description], i) => <li key={title}><span className="step-count">0{i + 1}</span><h3>{title}</h3><p>{description}</p></li>)}</ol></div></section>
+      <section className="benefits-section container" aria-labelledby="benefits-heading"><div className="benefits-intro"><p className="eyebrow">Built around your campus</p><h2 id="benefits-heading">Clarity for every<br />campus journey.</h2><p>A shared system that keeps university transportation organized.</p></div><div className="benefits-list">{benefits.map(([icon, title, description]) => <article key={title}><Icon name={icon} size={22} /><div><h3>{title}</h3><p>{description}</p></div></article>)}</div></section>
+    </main><Footer /></div>;
+}
