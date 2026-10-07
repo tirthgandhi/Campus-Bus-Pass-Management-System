@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const { errorHandler, ok } = require('./common/utils/http');
+const { ok } = require('./common/utils/http');
+const errorHandler = require('./common/middleware/errorMiddleware');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '32kb' }));

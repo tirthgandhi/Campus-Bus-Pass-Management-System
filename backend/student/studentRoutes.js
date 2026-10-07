@@ -1,7 +1,7 @@
 const express = require('express');
 const { protect, authorize } = require('../common/middleware/authMiddleware');
 const { wrap } = require('../common/utils/http');
-const controller = require('./controllers/passController');
+const controller = require('./controllers/studentController');
 const router = express.Router();
 router.use(protect, authorize('student'));
 router.get('/profile', wrap(controller.getProfile));
