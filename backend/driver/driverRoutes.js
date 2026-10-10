@@ -1,39 +1,38 @@
 const express = require("express");
-const {
-    protect,
-    authorize
-} = require("../common/middleware/authMiddleware");
-
-const {
-    getMyBusPassengers,
-    markAttendance,
-    getTodayAttendance
-} = require("./controllers/driverController");
-
 const router = express.Router();
 
-// GET  /api/driver/my-bus/passengers  → view assigned route's pickup students
-router.get(
-    "/my-bus/passengers",
-    protect,
-    authorize("driver"),
-    getMyBusPassengers
-);
+const {
+  loginDriver,
+  getProfile,
+  getDashboard,
+  getAssignedBus,
+  getAssignedRoute,
+  getAssignedStudents,
+  verifyPass,
+  recordAttendance,
+  getTodayAttendance,
+  reportProblem,
+  getMyProblems
+} = require("./controllers/driverController");
 
-// POST /api/driver/attendance          → mark student attendance
-router.post(
-    "/attendance",
-    protect,
-    authorize("driver"),
-    markAttendance
-);
+const { protect, authorize } = require("../common/middleware/authMiddleware");
 
-// GET  /api/driver/attendance/today    → view today's attendance
-router.get(
-    "/attendance/today",
-    protect,
-    authorize("driver"),
-    getTodayAttendance
-);
+// Public route
+router.post("/login", loginDriver);
+
+// Protected routes
+router.use(protect);
+router.use(authorize("driver"));
+
+router.get("/profile", getProfile);
+router.get("/dashboard", getDashboard);
+router.get("/assigned-bus", getAssignedBus);
+router.get("/assigned-route", getAssignedRoute);
+router.get("/students", getAssignedStudents);
+router.post("/verify-pass", verifyPass);
+router.post("/attendance", recordAttendance);
+router.get("/attendance/today", getTodayAttendance);
+router.post("/report-problem", reportProblem);
+router.get("/problems", getMyProblems);
 
 module.exports = router;
