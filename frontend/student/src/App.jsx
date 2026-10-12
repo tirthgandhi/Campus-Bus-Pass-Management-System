@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import AttendanceHistory from "./AttendanceHistory";
 import TransportRequestStatus from "./TransportRequestStatus";
+import { apiRequest } from "./api";
 
 const defaultStudent = {
   name: "Haley",
@@ -106,15 +107,32 @@ function LoginPage({ setPage }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function login(event) {
+  async function login(event) {
     event.preventDefault();
+    setError("");
 
     if (!email || !password) {
       setError("Please enter your email and password.");
       return;
     }
 
-    setPage("dashboard");
+    try {
+      const response = await apiRequest("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password, role: "student" }),
+      });
+      const session = response.data;
+      if (!session?.token) {
+        throw new Error("The server did not return a login token.");
+      }
+
+      const { token, ...user } = session;
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      setPage("dashboard");
+    } catch (error) {
+      setError(error.message);
+    }
   }
 
   return (
