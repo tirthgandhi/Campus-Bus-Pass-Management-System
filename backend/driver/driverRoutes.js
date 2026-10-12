@@ -1,39 +1,16 @@
-const express = require("express");
-const {
-    protect,
-    authorize
-} = require("../common/middleware/authMiddleware");
-
-const {
-    getMyBusPassengers,
-    markAttendance,
-    getTodayAttendance
-} = require("./controllers/driverController");
-
+const express = require('express');
+const { protect, authorize } = require('../common/middleware/authMiddleware');
+const { wrap } = require('../common/utils/http');
+const controller = require('./controllers/driverController');
 const router = express.Router();
-
-// GET  /api/driver/my-bus/passengers  → view assigned route's pickup students
-router.get(
-    "/my-bus/passengers",
-    protect,
-    authorize("driver"),
-    getMyBusPassengers
-);
-
-// POST /api/driver/attendance          → mark student attendance
-router.post(
-    "/attendance",
-    protect,
-    authorize("driver"),
-    markAttendance
-);
-
-// GET  /api/driver/attendance/today    → view today's attendance
-router.get(
-    "/attendance/today",
-    protect,
-    authorize("driver"),
-    getTodayAttendance
-);
-
+router.use(protect, authorize('driver'));
+router.get('/profile', wrap(controller.getProfile));
+router.get('/dashboard', wrap(controller.getDriverDashboard));
+router.get('/bus', wrap(controller.getAssignedBus));
+router.get('/route', wrap(controller.getAssignedRoute));
+router.get('/route/pickup-points', wrap(controller.getAssignedRoutePickupPoints));
+router.get('/students', wrap(controller.getAssignedStudents));
+router.post('/verify-bus-pass', wrap(controller.verifyBusPassId));
+router.post('/attendance', wrap(controller.markAttendance));
+router.get('/attendance/today', wrap(controller.getTodayAttendance));
 module.exports = router;
