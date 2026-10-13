@@ -104,6 +104,13 @@ export function AuthProvider({ children }) {
 
     saveToken(token);
     setSession({ user, token, loading: false, sessionError: null });
+
+    // Redirect students to the external student module
+    if (user.role === 'student') {
+      window.location.href = `http://localhost:5174/?token=${encodeURIComponent(token)}`;
+      return user;
+    }
+
     return user;
   }, [cancelPendingRequest]);
 

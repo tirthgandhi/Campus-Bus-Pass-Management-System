@@ -1,7 +1,7 @@
 const API_BASE_URL = "http://localhost:5000/api";
 
 export async function apiRequest(endpoint, options = {}) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("student_token");
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {

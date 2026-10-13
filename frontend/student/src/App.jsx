@@ -1,33 +1,289 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import AttendanceHistory from "./AttendanceHistory";
 import TransportRequestStatus from "./TransportRequestStatus";
 import { apiRequest } from "./api";
 
-const defaultStudent = {
-  name: "Haley",
-  email: "haley@university.edu",
-  enrollment: "2026AWT001",
-  phone: "9876543210",
-  department: "Computer Engineering",
-  semester: "5"
-};
+// GSFC University Students Routes 2026-27
+const ROUTES = [
+  {
+    id: "ROUTE-1",
+    busNumber: "GJ-16-AU-4788",
+    driverName: "Mr. Rajesh Patel",
+    stops: [
+      "Soma Talav (BPC Pump)",
+      "Gurukul Char Rasta",
+      "Bapod Police St",
+      "Super Bekery",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-2",
+    busNumber: "GJ-06-BX-3670",
+    driverName: "Mr. Suresh Sharma",
+    stops: [
+      "Parivar Char Rasta",
+      "Vrundavan Circle",
+      "Sardar Estate (SS)",
+      "Earth Icon",
+      "Amit Nagar",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-3",
+    busNumber: "GJ-06-BV-7875",
+    driverName: "Mr. Dinesh Verma",
+    stops: [
+      "Khodiyar Nagar",
+      "Airport Circle",
+      "Golden Chokadi",
+      "Dena Chokadi",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-4",
+    busNumber: "GJ-06-AX-3348",
+    driverName: "Mr. Mahesh Yadav",
+    stops: [
+      "Chankyapuri",
+      "Abhilasha Char Rasta",
+      "Harni Gada Circle",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-5",
+    busNumber: "GJ-16-AU-4890",
+    driverName: "Mr. Ramesh Chauhan",
+    stops: [
+      "Earth Icon",
+      "Jagdish Farshan",
+      "Miletry Boys",
+      "Amit Nagar",
+      "L & T Circle",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-6",
+    busNumber: "GJ-16-BV-7584",
+    driverName: "Mr. Nilesh Solanki",
+    stops: [
+      "Voltamp Company",
+      "Maneja Crossing",
+      "Hanuman Temple (Mak)",
+      "Novino",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-7",
+    busNumber: "GJ-16-AU-1390",
+    driverName: "Mr. Hitesh Rathod",
+    stops: [
+      "Ravi Park",
+      "Gamgasagar",
+      "Kabir Complex",
+      "Polo Ground",
+      "Susen Circle",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-8",
+    busNumber: "GJ-06-BV-7989",
+    driverName: "Mr. Bhavesh Joshi",
+    stops: [
+      "Darbar Chowkdi",
+      "Pramukh Prasad / Pramukh Darshan",
+      "Avdhut Fatak / JL Baug Fatak",
+      "Kalaghoda",
+      "Mahesana Nagar Circle",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-9",
+    busNumber: "GJ-06-BV-2915",
+    driverName: "Mr. Alpesh Trivedi",
+    stops: [
+      "Sarswati Complex",
+      "Tulsidham",
+      "Raj Mahel Gate",
+      "Fatehgunj - 808",
+      "Yogniketan",
+      "Nizampura - Tasty Vadapav",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-10",
+    busNumber: "GJ-16-AU-3840",
+    driverName: "Mr. Kalpesh Makwana",
+    stops: [
+      "Khekholi Circle",
+      "Atladra",
+      "Kia Moter",
+      "Sun Pharma Road",
+      "Tandalja",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-11",
+    busNumber: "GJ-06-AX-1826",
+    driverName: "Mr. Pratik Desai",
+    stops: [
+      "Hari Nagar Char Rasta",
+      "Nandalay Circle",
+      "Zansi Ki Rani",
+      "Jain Derasar",
+      "Dashama Chokdi",
+      "Iti Gorwa",
+      "Panchvati Circle",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-12",
+    busNumber: "GJ-06-BV-6129",
+    driverName: "Mr. Jigar Shah",
+    stops: [
+      "Akshar Chowk",
+      "Devdeep Nagar",
+      "Vasna Circle - Khteteshwar",
+      "Swaminarayan Mandir",
+      "Time Circle",
+      "Chhani Jakat Naka",
+      "Chhani Canal",
+      "Chhani Gurudwara",
+      "GSFC University"
+    ]
+  },
+  {
+    id: "ROUTE-13",
+    busNumber: "GJ-06-BV-6527",
+    driverName: "Mr. Vishal Pandya",
+    stops: [
+      "Nilamber Circle",
+      "Yash Complex",
+      "Natubhai Circle",
+      "Chakli Circle",
+      "Trident Circle",
+      "Genda Circle",
+      "GSFC University"
+    ]
+  }
+];
 
-const assignedTransport = {
-  busNumber: "GJ-01-BU-2145",
-  driverName: "Mr. Raj Patel",
-  routeName: "North Campus Express",
-  routeNumber: "R-04",
-  timing: "7:35 AM – 8:20 AM",
-  stops: ["University Gate", "City Square", "Library Junction", "North Campus"]
-};
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem("student_user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Read token from URL query param (passed from main app after login)
+function consumeTokenFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+  if (token) {
+    localStorage.setItem("student_token", token);
+    // Also clear the main app's session — student is now in the student module
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    // Clean the URL so token doesn't stay visible
+    window.history.replaceState({}, "", window.location.pathname);
+  }
+  return token;
+}
 
 export default function App() {
+  // Consume token from URL first, then check localStorage
+  const [ready, setReady] = useState(false);
   const [page, setPage] = useState("login");
-  const [student, setStudent] = useState(defaultStudent);
+  const [student, setStudent] = useState({
+    name: "", email: "", enrollment: "", phone: "", department: "", semester: ""
+  });
   const [busPass, setBusPass] = useState(null);
 
+  useEffect(() => {
+    const urlToken = consumeTokenFromUrl();
+    const storedToken = localStorage.getItem("student_token");
+
+    if (urlToken || storedToken) {
+      // Fetch real profile from backend
+      const token = urlToken || storedToken;
+      fetch("http://localhost:5000/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+      })
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success && res.data) {
+            const u = res.data;
+            const profile = {
+              name: u.name || "",
+              email: u.email || "",
+              enrollment: u.studentId || "",
+              phone: u.phone || "",
+              department: u.department || "",
+              semester: u.semester ? String(u.semester) : ""
+            };
+            setStudent(profile);
+            localStorage.setItem("student_user", JSON.stringify(profile));
+            setPage("dashboard");
+          } else {
+            // Token invalid — show login
+            localStorage.removeItem("student_token");
+            localStorage.removeItem("student_user");
+            setPage("login");
+          }
+        })
+        .catch(() => {
+          // Network error, try cached user
+          const cached = getStoredUser();
+          if (cached && cached.name) {
+            setStudent(cached);
+            setPage("dashboard");
+          } else {
+            setPage("login");
+          }
+        })
+        .finally(() => setReady(true));
+    } else {
+      setPage("login");
+      setReady(true);
+    }
+  }, []);
+
+  function handleLogout() {
+    // Clear student module session
+    localStorage.removeItem("student_token");
+    localStorage.removeItem("student_user");
+    // Also clear main app session so 5173 shows Sign In (not logged-in state)
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    // Redirect back to main landing page
+    window.location.href = "http://localhost:5173/";
+  }
+
+  if (!ready) {
+    return (
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#e8f1fa" }}>
+        <div style={{ textAlign: "center", color: "#1b3a6b" }}>
+          <div style={{ fontSize: "2rem", marginBottom: "12px" }}>C</div>
+          <p>Loading…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (page === "login") {
-    return <LoginPage setPage={setPage} />;
+    return <LoginPage />;
   }
 
   if (page === "register") {
@@ -53,7 +309,7 @@ export default function App() {
         </button>
         <button className={page === "request-status" ? "nav active" : "nav"} onClick={() => setPage("request-status")}>
           ◷ Request Status
-        </button> 
+        </button>
         <button className={page === "pass" ? "nav active" : "nav"} onClick={() => setPage("pass")}>
           ▣ My Bus Pass
         </button>
@@ -65,12 +321,12 @@ export default function App() {
         </button>
         <button className={page === "attendance" ? "nav active" : "nav"} onClick={() => setPage("attendance")}>
           ▤ Attendance History
-        </button> 
+        </button>
 
         <div className="sidebar-bottom">
           <p><strong>{student.name}</strong></p>
           <small>Student</small>
-          <button className="logout" onClick={() => setPage("login")}>↪ Logout</button>
+          <button className="logout" onClick={handleLogout}>↪ Logout</button>
         </div>
       </aside>
 
@@ -78,22 +334,17 @@ export default function App() {
         {page === "dashboard" && (
           <Dashboard student={student} busPass={busPass} setPage={setPage} />
         )}
-
         {page === "apply" && (
           <ApplyPass busPass={busPass} setBusPass={setBusPass} setPage={setPage} />
         )}
-
         {page === "pass" && (
           <MyBusPass student={student} busPass={busPass} setPage={setPage} />
         )}
-
-        {page === "transport" && <Transport busPass={busPass} />} 
-
+        {page === "transport" && <Transport busPass={busPass} />}
         {page === "profile" && (
           <Profile student={student} setStudent={setStudent} />
         )}
-        {page === "attendance" && <AttendanceHistory />} 
-        
+        {page === "attendance" && <AttendanceHistory />}
         {page === "request-status" && (
           <TransportRequestStatus busPass={busPass} setPage={setPage} />
         )}
@@ -102,74 +353,29 @@ export default function App() {
   );
 }
 
-function LoginPage({ setPage }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  async function login(event) {
-    event.preventDefault();
-    setError("");
-
-    if (!email || !password) {
-      setError("Please enter your email and password.");
-      return;
-    }
-
-    try {
-      const response = await apiRequest("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password, role: "student" }),
-      });
-      const session = response.data;
-      if (!session?.token) {
-        throw new Error("The server did not return a login token.");
-      }
-
-      const { token, ...user } = session;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      setPage("dashboard");
-    } catch (error) {
-      setError(error.message);
-    }
-  }
-
+function LoginPage({ setPage, setStudent, setReady }) {
   return (
     <div className="auth-page">
       <div className="auth-form">
         <div className="auth-logo">C</div>
         <p className="small-heading">CAMPUSCONNECT</p>
         <h1>Welcome back</h1>
-        <p className="muted">Sign in to manage your university transport.</p>
+        <p className="muted">Please sign in from the main portal.</p>
 
-        <form onSubmit={login}>
-          <label>College Email</label>
-          <input
-            type="email"
-            placeholder="you@university.edu"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
+        <div style={{ marginTop: "24px" }}>
+          <a
+            href="http://localhost:5173/login?role=student"
+            className="primary-button"
+            style={{ display: "block", textAlign: "center", textDecoration: "none", padding: "13px 18px", borderRadius: "10px", color: "#fff", background: "#1b3a6b", fontWeight: "700" }}
+          >
+            Go to Login Page
+          </a>
+        </div>
 
-          <label>Password</label>
-          <input
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-
-          {error && <p className="error">{error}</p>}
-
-          <button className="primary-button" type="submit">Sign In</button>
-        </form>
-
-        <p className="center-text">
-          New student?{" "}
-          <button className="link-button" onClick={() => setPage("register")}>
-            Create an account
-          </button>
+        <p className="center-text" style={{ marginTop: "16px" }}>
+          <a href="http://localhost:5173/" style={{ color: "#1b3a6b", fontWeight: "700" }}>
+            ← Back to Home
+          </a>
         </p>
       </div>
 
@@ -182,11 +388,41 @@ function LoginPage({ setPage }) {
 }
 
 function RegisterPage({ setPage }) {
+  const [form, setForm] = useState({ name: "", email: "", studentId: "", phone: "", department: "", password: "" });
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function register(event) {
+  async function register(event) {
     event.preventDefault();
-    setMessage("Registration successful. You can now sign in.");
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    try {
+      await apiRequest("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({
+          role: "student",
+          name: form.name,
+          collegeEmail: form.email.trim().toLowerCase(),
+          studentId: form.studentId.trim().toUpperCase(),
+          phone: form.phone,
+          department: form.department,
+          semester: 1,
+          password: form.password
+        }),
+      });
+      setMessage("Account created successfully. You can now sign in.");
+    } catch (err) {
+      setError(err.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function change(field) {
+    return (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
   }
 
   return (
@@ -198,23 +434,29 @@ function RegisterPage({ setPage }) {
 
         <form onSubmit={register}>
           <label>Full Name</label>
-          <input required placeholder="Your full name" />
+          <input required placeholder="Your full name" value={form.name} onChange={change("name")} disabled={loading} />
 
           <label>College Email</label>
-          <input required type="email" placeholder="you@university.edu" />
+          <input required type="email" placeholder="you@university.edu" value={form.email} onChange={change("email")} disabled={loading} />
 
           <label>Enrollment Number</label>
-          <input required placeholder="2026AWT001" />
+          <input required placeholder="CS2021001" value={form.studentId} onChange={change("studentId")} disabled={loading} />
 
           <label>Phone Number</label>
-          <input required placeholder="10-digit phone number" />
+          <input required placeholder="10-digit phone number" value={form.phone} onChange={change("phone")} disabled={loading} />
+
+          <label>Department</label>
+          <input required placeholder="e.g. Computer Science" value={form.department} onChange={change("department")} disabled={loading} />
 
           <label>Password</label>
-          <input required type="password" placeholder="Minimum 6 characters" />
+          <input required type="password" placeholder="Minimum 8 characters" value={form.password} onChange={change("password")} disabled={loading} />
 
+          {error && <p className="error">{error}</p>}
           {message && <p className="success">{message}</p>}
 
-          <button className="primary-button" type="submit">Create Account</button>
+          <button className="primary-button" type="submit" disabled={loading}>
+            {loading ? "Creating Account…" : "Create Account"}
+          </button>
         </form>
 
         <p className="center-text">
@@ -234,11 +476,14 @@ function RegisterPage({ setPage }) {
 }
 
 function Dashboard({ student, busPass, setPage }) {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
   return (
     <>
       <header>
         <p className="small-heading">STUDENT DASHBOARD</p>
-        <h1>Good morning, {student.name}.</h1>
+        <h1>{greeting}, {student.name || "Student"}.</h1>
         <p className="muted">Here is your transport overview.</p>
       </header>
 
@@ -251,7 +496,6 @@ function Dashboard({ student, busPass, setPage }) {
 
       <section className="panel">
         <h2>Bus Pass Application</h2>
-
         {busPass ? (
           <>
             <p><strong>Status:</strong> <span className="status">{busPass.status}</span></p>
@@ -274,8 +518,12 @@ function Dashboard({ student, busPass, setPage }) {
 }
 
 function ApplyPass({ busPass, setBusPass, setPage }) {
+  const [selectedRoute, setSelectedRoute] = useState("");
   const [pickupStop, setPickupStop] = useState("");
   const [termDuration, setTermDuration] = useState("");
+
+  const route = ROUTES.find((r) => r.id === selectedRoute);
+  const availableStops = route ? route.stops.filter((s) => s !== "GSFC University") : [];
 
   if (busPass && ["Pending", "Approved"].includes(busPass.status)) {
     return (
@@ -293,14 +541,15 @@ function ApplyPass({ busPass, setBusPass, setPage }) {
 
   function submit(event) {
     event.preventDefault();
-
     setBusPass({
       applicationId: `APP-${Date.now()}`,
       status: "Pending",
+      routeId: selectedRoute,
+      busNumber: route?.busNumber || "",
+      driverName: route?.driverName || "",
       pickupStop,
       termDuration
     });
-
     setPage("pass");
   }
 
@@ -308,27 +557,63 @@ function ApplyPass({ busPass, setBusPass, setPage }) {
     <>
       <p className="small-heading">STUDENT PORTAL</p>
       <h1>Apply for Bus Pass</h1>
-      <p className="muted">Submit your transport requirements for admin approval.</p>
+      <p className="muted">Select the route closest to your home and your boarding stop.</p>
 
       <div className="panel form-panel">
         <form onSubmit={submit}>
-          <label>Select Pickup Point</label>
+
+          <label>Select Route</label>
           <select
             required
-            value={pickupStop}
-            onChange={(event) => setPickupStop(event.target.value)}>
-          <option value="">Select your pickup point</option>
-          <option value="Darbar Chokdi">Darbar Chokdi</option>
-          <option value="Suncity Circle">Suncity Circle</option>
-          <option value="Avdhut Fatak">Avdhut Fatak</option>
-          </select> 
+            value={selectedRoute}
+            onChange={(e) => { setSelectedRoute(e.target.value); setPickupStop(""); }}
+          >
+            <option value="">— Select your route —</option>
+            {ROUTES.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.id.replace("ROUTE-", "Route ")} – {r.stops[0]}
+              </option>
+            ))}
+          </select>
+
+          {selectedRoute && (
+            <>
+              <label>Select Your Boarding Stop</label>
+              <select
+                required
+                value={pickupStop}
+                onChange={(e) => setPickupStop(e.target.value)}
+              >
+                <option value="">— Select your boarding stop —</option>
+                {availableStops.map((stop) => (
+                  <option key={stop} value={stop}>{stop}</option>
+                ))}
+              </select>
+
+              <div className="route-preview">
+                <p className="route-preview-label">All Stops on {selectedRoute.replace("ROUTE-", "Route ")}</p>
+                <ol className="stops">
+                  {route.stops.map((stop) => (
+                    <li
+                      key={stop}
+                      className={stop === pickupStop ? "stop-selected" : ""}
+                    >
+                      {stop}
+                      {stop === pickupStop && <span className="stop-tag boarding">Your Stop</span>}
+                      {stop === "GSFC University" && <span className="stop-tag">Destination</span>}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </>
+          )}
 
           <label>Term Duration</label>
-          <select required value={termDuration} onChange={(event) => setTermDuration(event.target.value)}>
-            <option value="">Select duration</option>
+          <select required value={termDuration} onChange={(e) => setTermDuration(e.target.value)}>
+            <option value="">— Select duration —</option>
             <option>January – June 2026</option>
             <option>July – December 2026</option>
-            <option>Full Academic Year</option>
+            <option>Full Academic Year 2026-27</option>
           </select>
 
           <button className="primary-button" type="submit">Submit Application</button>
@@ -363,7 +648,7 @@ function MyBusPass({ student, busPass, setPage }) {
         </div>
 
         <div className="pass-card-content">
-          <div className="student-photo">{student.name.charAt(0)}</div>
+          <div className="student-photo">{(student.name || "S").charAt(0).toUpperCase()}</div>
           <div>
             <h2>{student.name}</h2>
             <p>{student.enrollment}</p>
@@ -387,10 +672,8 @@ function MyBusPass({ student, busPass, setPage }) {
         <h2>Application Details</h2>
         <p><strong>Application ID:</strong> {busPass.applicationId}</p>
         <p><strong>Bus Pass ID:</strong>{" "}
-         {busPass.status === "Approved"
-         ? busPass.busPassId
-         : "Will be generated after admin approval"}
-        </p> 
+          {busPass.status === "Approved" ? busPass.busPassId : "Will be generated after admin approval"}
+        </p>
         <p><strong>Pickup Stop:</strong> {busPass.pickupStop}</p>
       </div>
     </>
@@ -398,44 +681,59 @@ function MyBusPass({ student, busPass, setPage }) {
 }
 
 function Transport({ busPass }) {
+  const route = busPass ? ROUTES.find((r) => r.id === busPass.routeId) : null;
+
   if (!busPass || busPass.status !== "Approved") {
     return (
       <>
         <p className="small-heading">STUDENT PORTAL</p>
         <h1>My Bus & Route</h1>
-
         <div className="panel">
           <h2>Assignment Pending</h2>
           <p className="muted">
-            Your bus and route details will appear here after the admin
-            approves your transport request.
+            Bus number and driver details will be revealed here once the admin approves your transport request.
           </p>
+          {busPass && (
+            <div style={{ marginTop: "16px", padding: "14px 16px", borderRadius: "10px", background: "#f8e7c9", color: "#a66a16", fontSize: "0.9rem" }}>
+              Your application for <strong>{busPass.routeId?.replace("ROUTE-", "Route ")}</strong> (boarding at <strong>{busPass.pickupStop}</strong>) is currently <strong>{busPass.status}</strong>.
+            </div>
+          )}
         </div>
       </>
     );
-  } 
+  }
+
   return (
     <>
       <p className="small-heading">STUDENT PORTAL</p>
       <h1>My Bus & Route</h1>
-      <p className="muted">Your assigned transport details.</p>
+      <p className="muted">Your assigned transport details for this term.</p>
 
       <section className="cards">
-        <Card title="Bus Number" value={assignedTransport.busNumber} icon="▰" />
-        <Card title="Route Number" value={assignedTransport.routeNumber} icon="⌁" />
-        <Card title="Driver" value={assignedTransport.driverName} icon="◉" />
-        <Card title="Pickup Time" value="7:35 AM" icon="◷" />
+        <Card title="Bus Number" value={busPass.busNumber || route?.busNumber || "—"} icon="▰" />
+        <Card title="Route" value={busPass.routeId?.replace("ROUTE-", "Route ") || "—"} icon="⌁" />
+        <Card title="Driver" value={busPass.driverName || route?.driverName || "—"} icon="◉" />
+        <Card title="Boarding Stop" value={busPass.pickupStop || "—"} icon="◷" />
       </section>
 
-      <div className="panel">
-        <h2>{assignedTransport.routeName}</h2>
-        <p><strong>Route Timing:</strong> {assignedTransport.timing}</p>
-        <p><strong>Stops:</strong></p>
-
-        <ol className="stops">
-          {assignedTransport.stops.map((stop) => <li key={stop}>{stop}</li>)}
-        </ol>
-      </div>
+      {route && (
+        <div className="panel">
+          <h2>{busPass.routeId?.replace("ROUTE-", "Route ")} — All Stops</h2>
+          <p><strong>Bus Number:</strong> {route.busNumber}</p>
+          <p><strong>Driver:</strong> {route.driverName}</p>
+          <p><strong>Your Boarding Stop:</strong> {busPass.pickupStop}</p>
+          <p><strong>Stops in order:</strong></p>
+          <ol className="stops">
+            {route.stops.map((stop) => (
+              <li key={stop} className={stop === busPass.pickupStop ? "stop-selected" : ""}>
+                {stop}
+                {stop === busPass.pickupStop && <span className="stop-tag boarding">Your Stop</span>}
+                {stop === "GSFC University" && <span className="stop-tag">Destination</span>}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </>
   );
 }
@@ -447,7 +745,9 @@ function Profile({ student, setStudent }) {
   function save(event) {
     event.preventDefault();
     setStudent(form);
+    localStorage.setItem("student_user", JSON.stringify(form));
     setMessage("Profile updated successfully.");
+    setTimeout(() => setMessage(""), 3000);
   }
 
   return (
@@ -459,7 +759,7 @@ function Profile({ student, setStudent }) {
       <div className="panel form-panel">
         <form onSubmit={save}>
           <label>Full Name</label>
-          <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
 
           <label>College Email</label>
           <input value={form.email} disabled />
@@ -468,13 +768,13 @@ function Profile({ student, setStudent }) {
           <input value={form.enrollment} disabled />
 
           <label>Phone Number</label>
-          <input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+          <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
 
           <label>Department</label>
-          <input value={form.department} onChange={(event) => setForm({ ...form, department: event.target.value })} />
+          <input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} />
 
           <label>Semester</label>
-          <input value={form.semester} onChange={(event) => setForm({ ...form, semester: event.target.value })} />
+          <input value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })} />
 
           {message && <p className="success">{message}</p>}
 

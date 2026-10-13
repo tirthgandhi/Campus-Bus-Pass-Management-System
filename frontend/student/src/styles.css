@@ -461,6 +461,46 @@ input:disabled {
 .stops li {
   padding: 9px 0;
   border-bottom: 1px solid var(--background);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stop-selected {
+  font-weight: 700;
+  color: var(--dark-blue);
+}
+
+.stop-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--dark-blue);
+  background: var(--pale-blue);
+}
+
+.stop-tag.boarding {
+  color: var(--success);
+  background: #dcefe5;
+}
+
+.route-preview {
+  margin-top: 18px;
+  padding: 16px 20px;
+  border: 1px solid var(--pale-blue);
+  border-radius: 12px;
+  background: var(--background);
+}
+
+.route-preview-label {
+  margin: 0 0 10px;
+  color: var(--blue);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 @media (max-width: 900px) {
