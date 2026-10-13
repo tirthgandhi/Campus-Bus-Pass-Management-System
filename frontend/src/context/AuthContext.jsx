@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { loginDriver, getProfile } from "../api/driverApi";
 
 const AuthContext = createContext(null);
@@ -8,12 +9,20 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem("driverToken"));
   const [loading, setLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    localStorage.removeItem("driverToken");
+    localStorage.removeItem("driverInfo");
+    setToken(null);
+    setDriver(null);
+  }, []);
+
   useEffect(() => {
     async function loadUser() {
       if (!token) {
         setLoading(false);
         return;
       }
+
       try {
         const res = await getProfile();
         if (res.data.success) {
@@ -27,8 +36,9 @@ export function AuthProvider({ children }) {
         setLoading(false);
       }
     }
+
     loadUser();
-  }, [token]);
+  }, [logout, token]);
 
   const login = async (credentials) => {
     const res = await loginDriver(credentials);
@@ -40,13 +50,6 @@ export function AuthProvider({ children }) {
       return { success: true };
     }
     return { success: false, message: res.data.message };
-  };
-
-  const logout = () => {
-    localStorage.removeItem("driverToken");
-    localStorage.removeItem("driverInfo");
-    setToken(null);
-    setDriver(null);
   };
 
   return (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const links = [
@@ -72,11 +72,6 @@ export default function AppLayout({ title, children }) {
   const [open, setOpen] = useState(false);
   const { driver, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    setOpen(false);
-  }, [location.pathname]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -84,6 +79,8 @@ export default function AppLayout({ title, children }) {
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  const closeMobileMenu = () => setOpen(false);
 
   const handleLogout = () => {
     logout();
@@ -172,6 +169,7 @@ export default function AppLayout({ title, children }) {
           <NavLink
             key={l.to}
             to={l.to}
+            onClick={closeMobileMenu}
             className={({ isActive }) =>
               `nav-link flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl mx-0.5 text-[9px] font-medium ${
                 isActive
@@ -221,7 +219,7 @@ export default function AppLayout({ title, children }) {
               </NavLink>
             ))}
             <button
-              onClick={() => setOpen(false)}
+              onClick={closeMobileMenu}
               className="w-full rounded-2xl py-3.5 text-sm font-medium text-[#6B8CAE] hover:bg-[#F0F7FC] transition mt-1"
             >
               Close
