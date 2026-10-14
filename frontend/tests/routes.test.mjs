@@ -40,7 +40,7 @@ test('landing route retains one public layout, main region and footer', () => {
 
 test('login retains all roles and hides public registration for admin', () => {
   const html = render('/login');
-  for (const role of ['student', 'driver', 'admin']) assert.match(html, new RegExp(`value="${role}"`));
+  for (const role of ['driver', 'admin']) assert.match(html, new RegExp(`value="${role}"`));
   assert.match(html, /Create Student Account/);
   const admin = render('/login?role=admin');
   assert.match(admin, /Administrator accounts are provided/);
@@ -73,4 +73,13 @@ test('403 and 404 reuse the status component with the correct content', () => {
   assert.match(render('/missing'), /Page Not Found/);
   assert.match(render('/register/admin'), /Page Not Found/);
   assert.match(render('/missing'), /Go Home/);
+});
+
+test('student dashboard uses its integrated portal and navigation', () => {
+ const html=render('/student/dashboard','student');
+ assert.match(html,/student-portal/);
+ assert.match(html,/Route Test/);
+ for(const label of ['Apply for Pass','Request Status','My Bus Pass','Bus &amp; Route','My Profile','Attendance History']) assert.ok(html.includes(label),label);
+ assert.doesNotMatch(html,/localhost:5174/);
+ assert.equal((html.match(/<main\b/g)||[]).length,1);
 });

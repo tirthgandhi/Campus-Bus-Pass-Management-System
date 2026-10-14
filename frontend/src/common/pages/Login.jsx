@@ -69,8 +69,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       const authenticatedUser = await login(email.trim().toLowerCase(), password, role);
-      // Students are redirected externally to the student module — don't navigate internally
-      if (active.current && authenticatedUser.role !== 'student') {
+      if (active.current) {
         navigate(returnPath(location.state?.from, authenticatedUser.role), { replace: true });
       }
     } catch (err) {

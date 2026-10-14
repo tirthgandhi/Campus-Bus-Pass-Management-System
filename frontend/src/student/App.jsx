@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import AttendanceHistory from "./AttendanceHistory";
 import TransportRequestStatus from "./TransportRequestStatus";
-import { apiRequest } from "./api";
+import { useAuth } from "../common/context/AuthContext";
+import "./styles.css";
 
 // GSFC University Students Routes 2026-27
 const ROUTES = [
@@ -178,120 +179,14 @@ const ROUTES = [
   }
 ];
 
-function getStoredUser() {
-  try {
-    const raw = localStorage.getItem("student_user");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-// Read token from URL query param (passed from main app after login)
-function consumeTokenFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("token");
-  if (token) {
-    localStorage.setItem("student_token", token);
-    // Also clear the main app's session — student is now in the student module
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    // Clean the URL so token doesn't stay visible
-    window.history.replaceState({}, "", window.location.pathname);
-  }
-  return token;
-}
-
 export default function App() {
-  // Consume token from URL first, then check localStorage
-  const [ready, setReady] = useState(false);
-  const [page, setPage] = useState("login");
-  const [student, setStudent] = useState({
-    name: "", email: "", enrollment: "", phone: "", department: "", semester: ""
-  });
-  const [busPass, setBusPass] = useState(null);
-
-  useEffect(() => {
-    const urlToken = consumeTokenFromUrl();
-    const storedToken = localStorage.getItem("student_token");
-
-    if (urlToken || storedToken) {
-      // Fetch real profile from backend
-      const token = urlToken || storedToken;
-      fetch("http://localhost:5000/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
-      })
-        .then((r) => r.json())
-        .then((res) => {
-          if (res.success && res.data) {
-            const u = res.data;
-            const profile = {
-              name: u.name || "",
-              email: u.email || "",
-              enrollment: u.studentId || "",
-              phone: u.phone || "",
-              department: u.department || "",
-              semester: u.semester ? String(u.semester) : ""
-            };
-            setStudent(profile);
-            localStorage.setItem("student_user", JSON.stringify(profile));
-            setPage("dashboard");
-          } else {
-            // Token invalid — show login
-            localStorage.removeItem("student_token");
-            localStorage.removeItem("student_user");
-            setPage("login");
-          }
-        })
-        .catch(() => {
-          // Network error, try cached user
-          const cached = getStoredUser();
-          if (cached && cached.name) {
-            setStudent(cached);
-            setPage("dashboard");
-          } else {
-            setPage("login");
-          }
-        })
-        .finally(() => setReady(true));
-    } else {
-      setPage("login");
-      setReady(true);
-    }
-  }, []);
-
-  function handleLogout() {
-    // Clear student module session
-    localStorage.removeItem("student_token");
-    localStorage.removeItem("student_user");
-    // Also clear main app session so 5173 shows Sign In (not logged-in state)
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    // Redirect back to main landing page
-    window.location.href = "http://localhost:5173/";
-  }
-
-  if (!ready) {
-    return (
-      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#e8f1fa" }}>
-        <div style={{ textAlign: "center", color: "#1b3a6b" }}>
-          <div style={{ fontSize: "2rem", marginBottom: "12px" }}>C</div>
-          <p>Loading…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (page === "login") {
-    return <LoginPage />;
-  }
-
-  if (page === "register") {
-    return <RegisterPage setPage={setPage} />;
-  }
-
+ const { user, logout } = useAuth();
+ const [page, setPage] = useState("dashboard");
+ const [student, setStudent] = useState(() => ({name:user.name,email:user.email,enrollment:user.studentId || "",phone:user.phone || "",department:user.department || "",semester:user.semester || ""}));
+ const [busPass,setBusPass]=useState(null);
+ const handleLogout=logout;
   return (
-    <div className="app">
+    <div className="student-portal"><div className="app">
       <aside className="sidebar">
         <div className="logo">
           <div className="logo-circle">C</div>
@@ -349,130 +244,8 @@ export default function App() {
           <TransportRequestStatus busPass={busPass} setPage={setPage} />
         )}
       </main>
-    </div>
-  );
-}
-
-function LoginPage({ setPage, setStudent, setReady }) {
-  return (
-    <div className="auth-page">
-      <div className="auth-form">
-        <div className="auth-logo">C</div>
-        <p className="small-heading">CAMPUSCONNECT</p>
-        <h1>Welcome back</h1>
-        <p className="muted">Please sign in from the main portal.</p>
-
-        <div style={{ marginTop: "24px" }}>
-          <a
-            href="http://localhost:5173/login?role=student"
-            className="primary-button"
-            style={{ display: "block", textAlign: "center", textDecoration: "none", padding: "13px 18px", borderRadius: "10px", color: "#fff", background: "#1b3a6b", fontWeight: "700" }}
-          >
-            Go to Login Page
-          </a>
-        </div>
-
-        <p className="center-text" style={{ marginTop: "16px" }}>
-          <a href="http://localhost:5173/" style={{ color: "#1b3a6b", fontWeight: "700" }}>
-            ← Back to Home
-          </a>
-        </p>
-      </div>
-
-      <div className="auth-side">
-        <p>SMART UNIVERSITY TRANSPORT</p>
-        <h1>Your journey,<br />made simpler.</h1>
-      </div>
-    </div>
-  );
-}
-
-function RegisterPage({ setPage }) {
-  const [form, setForm] = useState({ name: "", email: "", studentId: "", phone: "", department: "", password: "" });
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function register(event) {
-    event.preventDefault();
-    setError("");
-    setMessage("");
-    setLoading(true);
-
-    try {
-      await apiRequest("/auth/signup", {
-        method: "POST",
-        body: JSON.stringify({
-          role: "student",
-          name: form.name,
-          collegeEmail: form.email.trim().toLowerCase(),
-          studentId: form.studentId.trim().toUpperCase(),
-          phone: form.phone,
-          department: form.department,
-          semester: 1,
-          password: form.password
-        }),
-      });
-      setMessage("Account created successfully. You can now sign in.");
-    } catch (err) {
-      setError(err.message || "Registration failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function change(field) {
-    return (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
-  }
-
-  return (
-    <div className="auth-page">
-      <div className="auth-form">
-        <div className="auth-logo">C</div>
-        <p className="small-heading">STUDENT REGISTRATION</p>
-        <h1>Create Account</h1>
-
-        <form onSubmit={register}>
-          <label>Full Name</label>
-          <input required placeholder="Your full name" value={form.name} onChange={change("name")} disabled={loading} />
-
-          <label>College Email</label>
-          <input required type="email" placeholder="you@university.edu" value={form.email} onChange={change("email")} disabled={loading} />
-
-          <label>Enrollment Number</label>
-          <input required placeholder="CS2021001" value={form.studentId} onChange={change("studentId")} disabled={loading} />
-
-          <label>Phone Number</label>
-          <input required placeholder="10-digit phone number" value={form.phone} onChange={change("phone")} disabled={loading} />
-
-          <label>Department</label>
-          <input required placeholder="e.g. Computer Science" value={form.department} onChange={change("department")} disabled={loading} />
-
-          <label>Password</label>
-          <input required type="password" placeholder="Minimum 8 characters" value={form.password} onChange={change("password")} disabled={loading} />
-
-          {error && <p className="error">{error}</p>}
-          {message && <p className="success">{message}</p>}
-
-          <button className="primary-button" type="submit" disabled={loading}>
-            {loading ? "Creating Account…" : "Create Account"}
-          </button>
-        </form>
-
-        <p className="center-text">
-          Already registered?{" "}
-          <button className="link-button" onClick={() => setPage("login")}>
-            Sign In
-          </button>
-        </p>
-      </div>
-
-      <div className="auth-side">
-        <p>STUDENT BUS PASS PORTAL</p>
-        <h1>Travel smarter,<br />every day.</h1>
-      </div>
-    </div>
-  );
+    </div></div>
+ );
 }
 
 function Dashboard({ student, busPass, setPage }) {

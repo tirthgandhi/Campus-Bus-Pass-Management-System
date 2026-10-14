@@ -11,6 +11,7 @@ import Login from '../pages/Login';
 import StudentRegister from '../pages/StudentRegister';
 import DriverRegister from '../pages/DriverRegister';
 import Dashboard from '../pages/Dashboard';
+import StudentApp from '../../student/App';
 import Unauthorized from '../pages/Unauthorized';
 import NotFound from '../pages/NotFound';
 
@@ -74,7 +75,7 @@ export default function AppRoutes() {
         <Route path="/signup" element={<Navigate to="/register/student" replace />} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
 
-        {ROLES.filter((role) => role !== 'admin').map((role) => (
+        {ROLES.filter((role) => role === 'driver').map((role) => (
           <Route key={role} element={<RoleRoute role={role} />}>
             <Route element={<DashboardLayout />}>
               <Route path={`/${role}/dashboard`} element={<Dashboard />} />
@@ -82,6 +83,7 @@ export default function AppRoutes() {
           </Route>
         ))}
 
+        <Route element={<RoleRoute role="student" />}><Route path="/student/dashboard" element={<StudentApp />} /></Route>
         <Route element={<RoleRoute role="admin" />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
