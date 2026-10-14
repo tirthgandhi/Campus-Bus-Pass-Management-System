@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { AxiosError } from 'axios';
 import api, { getApiError } from '../src/common/services/api.js';
 import { loginUser, signupUser, getMe } from '../src/common/services/authService.js';
+import { summarizeAttendance } from '../src/common/services/attendanceService.js';
 import {
   clearStoredSession,
   getTokenExpiresAt,
@@ -143,6 +144,15 @@ test('JWT expiry uses seconds while malformed tokens are left for backend verifi
   assert.equal(isTokenExpired(tokenAt(100), 100000), true);
   assert.equal(getTokenExpiresAt('malformed'), null);
   assert.equal(getTokenExpiresAt(null), null);
+});
+
+test('attendance summary uses recorded present and absent days and rounds the percentage', () => {
+  assert.deepEqual(summarizeAttendance([
+    { status: 'present' },
+    { status: 'absent' },
+    { status: 'present' },
+  ]), { present: 2, absent: 1, total: 3, percentage: 67 });
+  assert.deepEqual(summarizeAttendance([]), { present: 0, absent: 0, total: 0, percentage: 0 });
 });
 
 test('server internals never reach visible error messages', () => {

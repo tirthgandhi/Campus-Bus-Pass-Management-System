@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
 import Icon from '../components/Icon';
 import Input from '../components/Input';
@@ -26,7 +26,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { login, user, isAuthenticated, loading } = useAuth();
+  const { login, loading } = useAuth();
   const role = ROLES.includes(searchParams.get('role')) ? searchParams.get('role') : 'student';
   const [email, setEmail] = useState(location.state?.registered ? location.state.email || '' : '');
   const [password, setPassword] = useState('');
@@ -42,7 +42,6 @@ export default function Login() {
   }, []);
 
   if (loading) return <Loader />;
-  if (isAuthenticated) return <Navigate to={returnPath(location.state?.from, user.role)} replace />;
 
   const changeRole = (nextRole) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -70,7 +69,10 @@ export default function Login() {
     setSubmitting(true);
     try {
       const authenticatedUser = await login(email.trim().toLowerCase(), password, role);
-      if (active.current) navigate(returnPath(location.state?.from, authenticatedUser.role), { replace: true });
+      // Students are redirected externally to the student module — don't navigate internally
+      if (active.current && authenticatedUser.role !== 'student') {
+        navigate(returnPath(location.state?.from, authenticatedUser.role), { replace: true });
+      }
     } catch (err) {
       if (active.current) setError(getApiError(err, 'login'));
     } finally {
@@ -155,7 +157,22 @@ export default function Login() {
 
       <div className="auth-alternative">
         {role === 'admin' ? (
-          <p>Administrator accounts are provided by the university.</p>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ margin: '0 0 10px' }}>Administrator accounts are managed by the campus transport authority.</p>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ width: '100%', minHeight: '38px', fontSize: '13px', padding: '6px 12px' }}
+              onClick={() => {
+                setEmail('transport.admin@campus.edu');
+                setPassword('admin123');
+                setErrors({});
+                setError('');
+              }}
+            >
+              Fill Demo Administrator Credentials
+            </button>
+          </div>
         ) : (
           <>
             <p>New to the campus transport portal?</p>
