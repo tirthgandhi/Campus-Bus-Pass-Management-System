@@ -1,0 +1,15 @@
+const express = require('express');
+const { protect, authorize } = require('../middleware/authMiddleware');
+const controller = require('../controllers/authController');
+const { wrap, ok } = require('../utils/http');
+const router = express.Router();
+router.get('/test', (req, res) => ok(res, {}, 'Authentication route is working'));
+router.post('/signup', wrap(controller.signup));
+router.post('/login', wrap(controller.login));
+router.get('/me', protect, controller.getMe);
+router.post('/register', wrap(controller.register));
+router.get('/verify-email', wrap(controller.verifyEmail));
+router.post('/login-verified', wrap(controller.loginVerified));
+router.post('/reset-driver-password', protect, authorize('admin'), wrap(controller.resetDriverPassword));
+for (const role of ['student', 'driver', 'admin']) router.get(`/${role}-only`, protect, authorize(role), (req, res) => ok(res, req.user));
+module.exports = router;

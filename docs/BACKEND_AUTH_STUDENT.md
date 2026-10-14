@@ -1,83 +1,39 @@
-# Backend Member 1: Authentication + Student (BACKEND_AUTH_STUDENT.md)
+# Authentication and Student APIs
 
-## 1. Developer Role
-This developer is responsible for the foundational backend setup, database connections, all authentication logic, and the APIs related to the Student module.
+Base prefixes remain `/api/auth` and `/api/student`. Responses consistently use `{ success, message, data }`; errors use `{ success: false, message }`. Protected calls require `Authorization: Bearer <token>`.
 
-## 2. Backend Setup
-- **Node.js**: Project initialization (`npm init`).
-- **Express.js**: Setup the main server.
-- **Environment variables**: Use `dotenv` for PORT, DB_URI, JWT_SECRET, etc.
-- **MongoDB connection**: Establish connection using Mongoose.
-- **Middleware**: Setup CORS, JSON parsing, error handling.
+## Authentication
 
-## 3. Backend Folder Structure
-```text
-backend/
-├── config/       # DB connection, env config
-├── models/       # Mongoose schemas
-├── controllers/  # Route handler logic
-├── routes/       # Express routes
-├── middleware/   # Auth checks, error handlers
-├── utils/        # Helpers (e.g., hashing, token generation)
-├── .env          # Secrets
-├── server.js     # Main entry
-└── package.json
-```
+| Method | Path | Input / behavior |
+| --- | --- | --- |
+| POST | `/api/auth/signup` | Student: `role`, `name`, `studentId`, `collegeEmail`, `phone`, `department`, `password`; optional `semester`. Driver: `role`, `name`, `email`, `phone`, `licenseNumber`, `password`. |
+| POST | `/api/auth/login` | `email`, `password`, `role`; queries the selected role collection. |
+| GET | `/api/auth/me` | Safe current identity from the JWT account and role. |
+| POST | `/api/auth/register` | Same registration fields; sends an email-verification link. |
+| GET | `/api/auth/verify-email` | `role` and `token` query parameters. |
+| POST | `/api/auth/login-verified` | Same login fields; additionally enforces email verification for student/driver. |
+| POST | `/api/auth/reset-driver-password` | **Admin only**; `email`, `newPassword`. |
+| GET | `/api/auth/test` | Health check. |
+| GET | `/api/auth/student-only`, `/driver-only`, `/admin-only` | JWT and corresponding role required. |
 
-## 4. MongoDB
-Design and implement Mongoose models for:
-- User (or separate Auth collections depending on team decision)
-- Student
-- BusPass
+Signup and login return `data: { _id, name, email, role, token }`; `/me` omits token. Student login uses collegeEmail through the common `email` request field. Public registration never creates an admin. Logout clears the frontend session; there is no logout API.
 
-## 5. Authentication
-Implement JWT-based authentication:
-- Student registration & login.
-- Password hashing using `bcrypt`.
-- Role-based authorization middleware (e.g., verifyToken, checkRole).
-- Do not store plain-text passwords.
+## Student module
 
-## 6. Student Registration & Login
-- **Registration**: Validate required fields (Full name, College email, Enrollment/Roll number, Phone number, Password). Validate college email format. Check for duplicates.
-- **Login**: Validate credentials, compare hashed password, return JWT token and user info.
+All endpoints below require the student role. Identity is always taken from the verified JWT.
 
-## 7. Student APIs
-- **Profile APIs**: `GET /api/student/profile`, `PUT /api/student/profile`
-- **Bus Pass APIs**:
-  - `POST /api/student/bus-pass` (Submit request)
-  - `GET /api/student/bus-pass/status` (View status)
-  - `GET /api/student/bus-pass` (View details)
-- **Transport APIs**:
-  - `GET /api/student/bus` (Assigned bus)
-  - `GET /api/student/route` (Assigned route)
+| Method | Path | Behavior |
+| --- | --- | --- |
+| GET | `/api/student/profile` | Own Student document without credentials. |
+| PUT | `/api/student/profile` | Update `name`, `phone`, `department`, optional `semester`; cannot edit role, password, enrollment, account status or assignments. |
+| GET | `/api/student/pickup-points` | Active pickup points on active routes. |
+| POST | `/api/student/passes` | `{ pickupPoint }`; server derives route, sets student and pending status. |
+| GET | `/api/student/passes/my` | Own request history with review status and rejection reason. |
+| GET | `/api/student/buspasses/my` | Own active BusAssignment with bus, route, stop and permanent busPassId; `null` before assignment. |
+| GET | `/api/student/attendance` | Own attendance records. |
 
-*Students should only be able to query their own data.*
+The existing pass-request and bus-pass read URLs are preserved. Students cannot create their own assignments. A pending/approved request blocks another request; rejection permits resubmission.
 
-## 8. Security & Error Handling
-- Use standard HTTP status codes (400, 401, 403, 404, 500).
-- Hash passwords. Use secure JWT secrets.
-- Validate incoming request body data.
-- Never expose database credentials in Git.
+## Validation and tests
 
-## 9. Testing
-Use Postman or similar tools to test:
-- Successful and failed registration.
-- Successful and failed login (wrong password, missing email).
-- Accessing protected profile routes with and without tokens.
-- Submitting bus pass requests.
-- Fetching assigned bus/route data.
-
-## 10. Git Branch
-- Use branch: `backend-auth-student`
-- Commit and push to this branch, then open a Pull Request.
-
-## 11. Frontend Coordination
-Provide Frontend Member 1 with the exact API contracts (Endpoint, Method, Auth Header, Request Body, Response JSON, Error formats).
-
-## 12. Completion Checklist
-- [ ] Server and DB connection setup.
-- [ ] Models created.
-- [ ] Auth middleware functioning.
-- [ ] Registration and Login APIs tested.
-- [ ] Student Profile and Bus Pass APIs tested.
-- [ ] Code pushed and PR created.
+Validate required fields, email, phone, password length, identifiers and enums at the API/schema boundaries. Never forward raw database exceptions. Passwords are excluded from populated documents as well as account responses. Run `node backend/tests/nine-model-integration.cjs` from the repository root for real API and persistence checks.

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../common/context/AuthContext";
 
 const links = [
   {
-    to: "/dashboard",
+    to: "/driver/dashboard",
     label: "Home",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -13,7 +13,7 @@ const links = [
     ),
   },
   {
-    to: "/verify-student",
+    to: "/driver/verify-student",
     label: "Verify",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -22,7 +22,7 @@ const links = [
     ),
   },
   {
-    to: "/students",
+    to: "/driver/students",
     label: "Students",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -31,7 +31,7 @@ const links = [
     ),
   },
   {
-    to: "/attendance",
+    to: "/driver/attendance",
     label: "Attendance",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -40,7 +40,7 @@ const links = [
     ),
   },
   {
-    to: "/route",
+    to: "/driver/route",
     label: "Route",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -49,7 +49,7 @@ const links = [
     ),
   },
   {
-    to: "/report-problem",
+    to: "/driver/report-problem",
     label: "Problem",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -58,7 +58,7 @@ const links = [
     ),
   },
   {
-    to: "/profile",
+    to: "/driver/profile",
     label: "Profile",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -70,7 +70,7 @@ const links = [
 
 export default function AppLayout({ title, children }) {
   const [open, setOpen] = useState(false);
-  const { driver, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -125,11 +125,11 @@ export default function AppLayout({ title, children }) {
         <div className="p-4 border-t border-white/10">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-8 h-8 rounded-full bg-[#1B3A6B] flex items-center justify-center text-xs font-bold">
-              {(driver?.name || "D")[0].toUpperCase()}
+              {(user?.name || "D")[0].toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-white truncate">{driver?.name}</p>
-              <p className="text-[10px] text-[#6B8CAE] truncate">{driver?.driverId}</p>
+              <p className="text-xs font-medium text-white truncate">{user?.name}</p>
+              <p className="text-[10px] text-[#6B8CAE] truncate">{user?.driverId}</p>
             </div>
           </div>
           <button

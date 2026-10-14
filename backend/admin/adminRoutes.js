@@ -1,131 +1,28 @@
-const express = require("express");
-const {
-    protect,
-    authorize
-} = require("../common/middleware/authMiddleware");
-
-const {
-    createBus,
-    getBuses,
-    getBusById,
-    updateBus,
-    deleteBus,
-    getPendingPasses,
-    approvePass,
-    rejectPass,
-    assignRouteToPass,
-    assignDriverToBus
-} = require("./controllers/adminController");
-
-const {
-    createRoute,
-    getRoutes,
-    updateRoute,
-    deleteRoute
-} = require("./controllers/routeController");
-
+const express = require('express');
+const { protect, authorize } = require('../common/middleware/authMiddleware');
+const { wrap, id } = require('../common/utils/http');
+const controller = require('./controllers/adminController');
 const router = express.Router();
-
-// ── Bus Management ────────────────────────────────────────────────────
-router.post(
-    "/buses",
-    protect,
-    authorize("admin"),
-    createBus
-);
-
-router.get(
-    "/buses",
-    protect,
-    authorize("admin"),
-    getBuses
-);
-
-router.get(
-    "/buses/:id",
-    protect,
-    authorize("admin"),
-    getBusById
-);
-
-router.put(
-    "/buses/:id",
-    protect,
-    authorize("admin"),
-    updateBus
-);
-
-router.delete(
-    "/buses/:id",
-    protect,
-    authorize("admin"),
-    deleteBus
-);
-
-// ── Driver Assignment ─────────────────────────────────────────────────
-router.put(
-    "/buses/:id/driver",
-    protect,
-    authorize("admin"),
-    assignDriverToBus
-);
-
-// ── Transport Request / Pass Management ───────────────────────────────
-router.get(
-    "/passes/pending",
-    protect,
-    authorize("admin"),
-    getPendingPasses
-);
-
-router.put(
-    "/passes/:id/approve",
-    protect,
-    authorize("admin"),
-    approvePass
-);
-
-router.put(
-    "/passes/:id/reject",
-    protect,
-    authorize("admin"),
-    rejectPass
-);
-
-router.put(
-    "/passes/:id/route",
-    protect,
-    authorize("admin"),
-    assignRouteToPass
-);
-
-// ── Route Management ──────────────────────────────────────────────────
-router.post(
-    "/routes",
-    protect,
-    authorize("admin"),
-    createRoute
-);
-
-router.get(
-    "/routes",
-    protect,
-    authorize("admin"),
-    getRoutes
-);
-
-router.put(
-    "/routes/:id",
-    protect,
-    authorize("admin"),
-    updateRoute
-);
-
-router.delete(
-    "/routes/:id",
-    protect,
-    authorize("admin"),
-    deleteRoute
-);
-
+router.use(protect, authorize('admin'));
+router.param('id', (req, res, next, value) => { try { id(value); next(); } catch (error) { next(error); } });
+for (const [path, singular, plural] of [['buses', 'Bus', 'Buses'], ['routes', 'Route', 'Routes'], ['pickup-points', 'PickupPoint', 'PickupPoints']]) {
+  router.get(`/${path}`, wrap(controller[`get${plural}`]));
+  router.post(`/${path}`, wrap(controller[`create${singular}`]));
+  router.get(`/${path}/:id`, wrap(controller[`get${singular}ById`]));
+  router.put(`/${path}/:id`, wrap(controller[`update${singular}`]));
+  router.delete(`/${path}/:id`, wrap(controller[`delete${singular}`]));
+}
+router.get('/students', wrap(controller.getStudents));
+router.put('/students/:id', wrap(controller.updateStudent));
+router.get('/drivers', wrap(controller.getDrivers));
+router.put('/drivers/:id', wrap(controller.updateDriver));
+router.put('/buses/:id/driver', wrap(controller.assignDriverToBus));
+router.put('/routes/:id/driver', wrap(controller.assignDriverToRoute));
+router.get('/transport-requests', wrap(controller.getTransportRequests));
+router.get('/transport-requests/pending', wrap(controller.getPendingTransportRequests));
+router.put('/transport-requests/:id/approve', wrap(controller.approveTransportRequest));
+router.put('/transport-requests/:id/reject', wrap(controller.rejectTransportRequest));
+router.post('/students/allocate', wrap(controller.allocateStudentToBus));
+router.get('/assignments', wrap(controller.getAssignments));
+router.get('/attendance', wrap(controller.getAttendance));
 module.exports = router;

@@ -1,38 +1,18 @@
-const express = require("express");
+const express = require('express');
+const { protect, authorize } = require('../common/middleware/authMiddleware');
+const { wrap } = require('../common/utils/http');
+const controller = require('./controllers/driverController');
 const router = express.Router();
-
-const {
-  loginDriver,
-  getProfile,
-  getDashboard,
-  getAssignedBus,
-  getAssignedRoute,
-  getAssignedStudents,
-  verifyPass,
-  recordAttendance,
-  getTodayAttendance,
-  reportProblem,
-  getMyProblems
-} = require("./controllers/driverController");
-
-const { protect, authorize } = require("../common/middleware/authMiddleware");
-
-// Public route
-router.post("/login", loginDriver);
-
-// Protected routes
-router.use(protect);
-router.use(authorize("driver"));
-
-router.get("/profile", getProfile);
-router.get("/dashboard", getDashboard);
-router.get("/assigned-bus", getAssignedBus);
-router.get("/assigned-route", getAssignedRoute);
-router.get("/students", getAssignedStudents);
-router.post("/verify-pass", verifyPass);
-router.post("/attendance", recordAttendance);
-router.get("/attendance/today", getTodayAttendance);
-router.post("/report-problem", reportProblem);
-router.get("/problems", getMyProblems);
-
+router.use(protect, authorize('driver'));
+router.get('/profile', wrap(controller.getProfile));
+router.get('/dashboard', wrap(controller.getDriverDashboard));
+router.get('/bus', wrap(controller.getAssignedBus));
+router.get('/route', wrap(controller.getAssignedRoute));
+router.get('/route/pickup-points', wrap(controller.getAssignedRoutePickupPoints));
+router.get('/students', wrap(controller.getAssignedStudents));
+router.post('/verify-bus-pass', wrap(controller.verifyBusPassId));
+router.post('/attendance', wrap(controller.markAttendance));
+router.get('/attendance/today', wrap(controller.getTodayAttendance));
+router.post('/report-problem', wrap(controller.reportProblem));
+router.get('/problems', wrap(controller.getMyProblems));
 module.exports = router;

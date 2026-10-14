@@ -58,22 +58,22 @@ export default function Dashboard() {
 
   const quickLinks = [
     {
-      to: "/students",
+      to: "/driver/students",
       title: "Passenger list",
       desc: "View assigned students",
     },
     {
-      to: "/route",
+      to: "/driver/route",
       title: "Route & stops",
       desc: "Pickup points for this trip",
     },
     {
-      to: "/report-problem",
+      to: "/driver/report-problem",
       title: "Report problem",
       desc: "Engine, tyre, other issues",
     },
     {
-      to: "/profile",
+      to: "/driver/profile",
       title: "My profile",
       desc: "License and contact details",
     },
@@ -132,13 +132,13 @@ export default function Dashboard() {
       {/* Primary actions */}
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4">
         <Link
-          to="/verify-student"
+          to="/driver/verify-student"
           className="rounded-xl bg-[#1B3A6B] hover:bg-[#0D1B2A] text-white text-center text-sm font-semibold py-3.5 sm:py-4 transition"
         >
           Verify Pass
         </Link>
         <Link
-          to="/attendance"
+          to="/driver/attendance"
           className="rounded-xl bg-white border border-[#A8C5E0] hover:border-[#1B3A6B] text-[#0D1B2A] text-center text-sm font-semibold py-3.5 sm:py-4 transition"
         >
           Attendance
