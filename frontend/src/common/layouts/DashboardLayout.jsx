@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import Navbar from './Navbar';
-import Sidebar from './Sidebar';
-import Modal from './Modal';
-import Button from './Button';
+import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
+import Modal from '../components/Modal';
+import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
-import './AppLayout.css';
+import './DashboardLayout.css';
 
-export default function AppLayout() {
+export default function DashboardLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);

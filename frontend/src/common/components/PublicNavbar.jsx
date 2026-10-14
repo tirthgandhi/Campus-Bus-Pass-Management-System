@@ -36,7 +36,7 @@ export default function PublicNavbar() {
           <div className="public-nav-actions">
             <a
               className="nav-login"
-              href="http://localhost:5174/"
+              href="/student/dashboard"
               onClick={closeMenus}
             >
               My Dashboard

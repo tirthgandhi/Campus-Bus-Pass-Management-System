@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import Brand from './Brand';
-import Icon from './Icon';
+import Brand from '../components/Brand';
+import Icon from '../components/Icon';
 
 export default function AuthLayout({ children, registration = false }) {
   return (

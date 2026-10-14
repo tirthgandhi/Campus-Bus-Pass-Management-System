@@ -1,18 +1,18 @@
 import { useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ProtectedRoute from '../components/ProtectedRoute';
+import ProtectedRoute from './ProtectedRoute';
 import RoleRoute from './RoleRoute';
 import { getDashboardPath } from './rolePaths';
-import AppLayout from '../components/AppLayout';
-import Landing from '../pages/Landing';
+import PublicLayout from '../layouts/PublicLayout';
+import LandingPage from '../pages/LandingPage';
 import Login from '../pages/Login';
 import StudentRegister from '../pages/StudentRegister';
 import DriverRegister from '../pages/DriverRegister';
-import Dashboard from '../pages/Dashboard';
-import ErrorPage from '../pages/ErrorPage';
+import StudentApp from '../../student/App';
+import Unauthorized from '../pages/Unauthorized';
+import NotFound from '../pages/NotFound';
 
-// Admin Module Components & Pages
 import AdminLayout from '../../admin/components/AdminLayout';
 import AdminDashboard from '../../admin/pages/AdminDashboard';
 import ManageStudents from '../../admin/pages/ManageStudents';
@@ -78,29 +78,14 @@ export default function AppRoutes() {
     <>
       <RouteEffects />
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Landing />} />
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<LandingPage />} />
+        </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register/student" element={<StudentRegister />} />
         <Route path="/register/driver" element={<DriverRegister />} />
         <Route path="/signup" element={<Navigate to="/register/student" replace />} />
-
-        {/* Global Dashboard Redirect */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardRedirect />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Student role */}
-        <Route element={<RoleRoute role="student" />}>
-          <Route element={<AppLayout />}>
-            <Route path="/student/dashboard" element={<Dashboard />} />
-          </Route>
-        </Route>
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
 
         {/* Driver role */}
         <Route element={<RoleRoute role="driver" />}>
@@ -113,7 +98,7 @@ export default function AppRoutes() {
           <Route path="/driver/report-problem" element={<DriverReportProblem />} />
         </Route>
 
-        {/* Admin Role with Admin Portal UI */}
+        <Route element={<RoleRoute role="student" />}><Route path="/student/dashboard" element={<StudentApp />} /></Route>
         <Route element={<RoleRoute role="admin" />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -130,9 +115,8 @@ export default function AppRoutes() {
           </Route>
         </Route>
 
-        {/* Error / Unauthorized */}
-        <Route path="/unauthorized" element={<ErrorPage forbidden />} />
-        <Route path="*" element={<ErrorPage />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
