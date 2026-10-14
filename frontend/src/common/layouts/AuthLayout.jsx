@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import Brand from '../components/Brand';
 import Icon from '../components/Icon';
+import '../../styles/public-theme.css';
 
 export default function AuthLayout({ children, registration = false }) {
   return (
-    <main className={`auth-page${registration ? ' auth-page-registration' : ''}`} id="main-content">
+    <main className={`auth-page${registration ? ' auth-page-registration' : ' auth-page-login'}`} id="main-content">
       <aside className="auth-brand-panel" aria-label="Campus transportation">
         <div className="auth-brand-link"><Brand light /></div>
         <div className="auth-brand-content">

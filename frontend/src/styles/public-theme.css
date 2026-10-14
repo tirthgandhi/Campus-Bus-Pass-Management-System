@@ -1,0 +1,55 @@
+/* Blue palette from the supplied reference, scoped to the public entry pages. */
+.landing,
+.auth-page-login {
+  --navy: #0D1B2A;
+  --deep-blue: #1B3A6B;
+  --medium-blue: #3D5A80;
+  --slate-blue: #6B8CAE;
+  --light-blue: #A8C5E0;
+  --pale-blue: #CDE1F2;
+  --ice-blue: #E8F1FA;
+  --primary: var(--deep-blue);
+  --primary-hover: var(--navy);
+  --dark: var(--navy);
+  --bg: var(--ice-blue);
+  --surface: #fff;
+  --text: var(--navy);
+  --text-secondary: var(--medium-blue);
+  --border: var(--light-blue);
+  --shadow: 0 4px 16px #0D1B2A08;
+  color: var(--text);
+}
+
+:is(.landing, .auth-page-login) :is(button, a, input, summary):focus-visible {
+  outline-color: var(--deep-blue);
+}
+
+:is(.landing, .auth-page-login) ::selection { background: var(--pale-blue); color: var(--navy); }
+:is(.landing, .auth-page-login) .btn-secondary { background: var(--ice-blue); border-color: var(--light-blue); color: var(--deep-blue); }
+:is(.landing, .auth-page-login) .btn-secondary:hover:not(:disabled) { background: var(--pale-blue); border-color: var(--slate-blue); }
+:is(.landing, .auth-page-login) .icon-button:hover { background: var(--pale-blue); }
+
+.auth-page-login { background: var(--ice-blue); }
+.auth-page-login .auth-brand-panel { background: linear-gradient(150deg, var(--deep-blue), var(--navy) 75%); color: var(--ice-blue); }
+.auth-page-login .auth-brand-content h2,
+.auth-page-login .brand-light .brand-copy strong { color: var(--ice-blue); }
+.auth-page-login .auth-panel-label,
+.auth-page-login .auth-route-campus,
+.auth-page-login .auth-panel-footer,
+.auth-page-login .brand-light .brand-copy > span { color: var(--light-blue); }
+.auth-page-login .auth-brand-content > p,
+.auth-page-login .auth-panel-caption { color: var(--pale-blue); }
+.auth-page-login .brand-light .brand-mark { background: var(--pale-blue); color: var(--deep-blue); }
+.auth-page-login .auth-route-stop { border-color: var(--light-blue); }
+.auth-page-login .auth-route-track { background: var(--slate-blue); }
+.auth-page-login .auth-route-bus { border-color: var(--slate-blue); background: var(--deep-blue); color: var(--pale-blue); }
+.auth-page-login .auth-form-panel { background: linear-gradient(135deg, var(--ice-blue) 55%, var(--pale-blue)); }
+.auth-page-login .auth-role-options { background: var(--pale-blue); }
+.auth-page-login .auth-role-option input:checked + span { background: var(--deep-blue); color: var(--ice-blue); border-color: var(--deep-blue); box-shadow: 0 2px 5px #0D1B2A14; }
+.auth-page-login .auth-role-option input:focus-visible + span { outline-color: var(--deep-blue); }
+.auth-page-login .auth-input-wrap input { border-color: var(--slate-blue); }
+.auth-page-login .auth-input-wrap input::placeholder { color: var(--medium-blue); }
+.auth-page-login .auth-input-wrap input:hover:not(:disabled) { border-color: var(--medium-blue); }
+.auth-page-login .auth-input-wrap input:focus { border-color: var(--deep-blue); box-shadow: 0 0 0 3px #A8C5E080; }
+.auth-page-login .auth-field-error .auth-input-wrap input { border-color: var(--error); }
+.auth-page-login .auth-field-error .auth-input-wrap input:focus { box-shadow: 0 0 0 3px #b91c1c14; }

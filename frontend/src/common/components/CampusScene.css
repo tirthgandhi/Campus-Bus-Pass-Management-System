@@ -1,0 +1,80 @@
+.campus-diorama { margin: 0; min-width: 0; position: relative; }
+.scene-label { display: flex; align-items: center; gap: 9px; color: var(--medium-blue); font-size: 11px; font-weight: 600; letter-spacing: .04em; padding: 0 20px; }
+.scene-label > span { width: 7px; height: 7px; border-radius: 50%; background: var(--deep-blue); box-shadow: 0 0 0 5px #A8C5E040; }
+.scene-viewport { height: 450px; position: relative; isolation: isolate; }
+.scene-halo { position: absolute; width: 390px; height: 390px; border: 1px solid #A8C5E080; border-radius: 50%; top: 15px; left: 50%; transform: translateX(-50%); background: radial-gradient(circle, #CDE1F2 0%, #CDE1F200 70%); }
+.scene-halo::before, .scene-halo::after { content: ''; position: absolute; border: 1px solid #A8C5E060; border-radius: 50%; inset: 30px; }
+.scene-halo::after { inset: -30px; }
+.scene-scale { position: absolute; left: 50%; top: 45%; perspective: 1100px; width: 0; height: 0; transform-style: preserve-3d; }
+.scene-world { position: absolute; width: 0; height: 0; transform-style: preserve-3d; transform: rotateX(-24deg) rotateY(-32deg); animation: campus-orbit 12s ease-in-out infinite; }
+.scene-solid { position: absolute; width: var(--w); height: var(--h); left: calc(var(--w) / -2); top: calc(var(--h) / -2); transform-style: preserve-3d; }
+.solid-face { position: absolute; left: 50%; top: 50%; width: var(--w); height: var(--h); backface-visibility: hidden; background: var(--pale-blue); }
+.solid-front { transform: translate(-50%, -50%) translateZ(calc(var(--d) / 2)); }
+.solid-back { transform: translate(-50%, -50%) rotateY(180deg) translateZ(calc(var(--d) / 2)); }
+.solid-right, .solid-left { width: var(--d); background: var(--slate-blue); }
+.solid-right { transform: translate(-50%, -50%) rotateY(90deg) translateZ(calc(var(--w) / 2)); }
+.solid-left { transform: translate(-50%, -50%) rotateY(-90deg) translateZ(calc(var(--w) / 2)); }
+.solid-top, .solid-bottom { height: var(--d); background: var(--ice-blue); }
+.solid-top { transform: translate(-50%, -50%) rotateX(90deg) translateZ(calc(var(--h) / 2)); }
+.solid-bottom { transform: translate(-50%, -50%) rotateX(-90deg) translateZ(calc(var(--h) / 2)); background: var(--medium-blue); }
+.scene-ground { --w: 470px; --h: 22px; --d: 290px; transform: translate3d(0, 112px, 0); }
+.scene-ground > .solid-front { background: var(--slate-blue); }
+.scene-ground > .solid-right { background: var(--medium-blue); }
+.scene-ground > .solid-top { background: var(--pale-blue); box-shadow: 0 40px 60px #1B3A6B28; }
+.scene-road { position: absolute; width: 100%; height: 110px; bottom: 15px; background: var(--medium-blue); border-block: 4px solid var(--ice-blue); }
+.scene-road::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 3px; background: repeating-linear-gradient(90deg, var(--light-blue) 0 24px, transparent 24px 44px); }
+.scene-path { position: absolute; width: 42px; height: 140px; left: 50%; top: 0; background: var(--ice-blue); }
+.scene-building { --w: 155px; --h: 155px; --d: 85px; }
+.scene-building-main { transform: translate3d(56px, 24px, -69px); }
+.scene-building-wing { --w: 95px; --h: 100px; --d: 78px; transform: translate3d(-76px, 51px, -70px); }
+.scene-building .solid-front { background: linear-gradient(90deg, var(--ice-blue), var(--pale-blue)); border: 1px solid var(--light-blue); }
+.building-title { display: block; color: var(--deep-blue); font-size: 12px; letter-spacing: 4px; font-weight: 800; padding: 13px 0 0; text-align: center; }
+.building-windows { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; padding: 14px; }
+.building-windows i { height: 14px; background: var(--medium-blue); border-top: 3px solid var(--slate-blue); }
+.solid-right .building-windows { grid-template-columns: repeat(3, 1fr); padding: 16px 10px; gap: 8px; }
+.building-door { position: absolute; bottom: 0; width: 28px; height: 31px; background: var(--deep-blue); left: calc(50% - 14px); border: 3px solid var(--light-blue); }
+.scene-roof { --w: 171px; --h: 10px; --d: 101px; transform: translate3d(56px, -58px, -69px); }
+.scene-roof .solid-top { background: var(--deep-blue); border: 5px solid var(--medium-blue); }
+.scene-bus-motion { transform-style: preserve-3d; animation: campus-drive 7s ease-in-out infinite; }
+.scene-bus { --w: 252px; --h: 76px; --d: 83px; transform: translate3d(-24px, 49px, 71px); }
+.scene-bus > .solid-front, .scene-bus > .solid-back { background: linear-gradient(var(--deep-blue) 0 9%, var(--ice-blue) 9% 69%, var(--deep-blue) 69% 88%, var(--pale-blue) 88%); border-radius: 9px 9px 3px 3px; }
+.scene-bus > .solid-right { background: var(--light-blue); border-radius: 8px 8px 3px 3px; }
+.scene-bus > .solid-left { background: var(--deep-blue); }
+.scene-bus > .solid-top { background: var(--ice-blue); border-radius: 8px; border: 3px solid var(--pale-blue); }
+.bus-windows { display: flex; gap: 5px; padding: 13px 39px 0 12px; }
+.bus-windows i { width: 100%; height: 30px; background: linear-gradient(135deg, var(--medium-blue) 40%, var(--slate-blue) 41%, var(--medium-blue) 65%); border-radius: 3px; }
+.bus-lettering { position: absolute; bottom: 11px; left: 58px; font-size: 8px; color: var(--ice-blue); font-weight: 700; letter-spacing: 2px; }
+.bus-door { position: absolute; width: 23px; height: 56px; right: 10px; top: 13px; background: linear-gradient(90deg, var(--medium-blue) 45%, var(--pale-blue) 45% 55%, var(--medium-blue) 55%); border: 2px solid var(--slate-blue); }
+.bus-destination { position: absolute; top: 4px; left: 8px; right: 8px; background: var(--navy); color: var(--ice-blue); text-align: center; font-size: 7px; letter-spacing: 2px; }
+.bus-windshield { position: absolute; top: 19px; left: 6px; right: 6px; height: 30px; border-radius: 4px; background: linear-gradient(125deg, var(--deep-blue), var(--slate-blue)); border: 2px solid var(--medium-blue); }
+.bus-headlights { position: absolute; bottom: 14px; left: 7px; width: 14px; height: 6px; background: var(--ice-blue); border-radius: 3px; box-shadow: 55px 0 var(--ice-blue); }
+.bus-roof-vent { position: absolute; inset: 20px 80px; border-radius: 5px; background: repeating-linear-gradient(90deg, var(--light-blue) 0 3px, var(--pale-blue) 3px 6px); border: 3px solid var(--pale-blue); }
+.bus-wheel { position: absolute; top: 58px; width: 34px; height: 34px; border-radius: 50%; border: 7px solid var(--navy); background: var(--slate-blue); display: grid; place-items: center; }
+.bus-wheel i { width: 8px; height: 8px; border-radius: 50%; background: var(--pale-blue); }
+.wheel-front { left: 194px; }.wheel-back { left: 28px; }
+.wheel-near { transform: translateZ(44px); }.wheel-far { transform: translateZ(-44px); }
+.scene-tree { position: absolute; width: 0; height: 0; transform-style: preserve-3d; }
+.scene-tree-one { transform: translate3d(-170px, 46px, -65px); }.scene-tree-two { transform: translate3d(175px, 46px, -60px); }
+.scene-tree > div { position: absolute; width: 51px; height: 70px; top: -35px; left: -25px; border-radius: 45%; background: radial-gradient(circle at 25% 25%, var(--pale-blue), var(--slate-blue) 65%, var(--medium-blue)); transform: rotateY(32deg); }
+.scene-tree > i { position: absolute; width: 7px; height: 30px; top: 27px; left: -3px; background: var(--medium-blue); }
+.scene-stop { position: absolute; transform: translate3d(188px, 24px, 116px); width: 4px; height: 78px; background: var(--slate-blue); transform-style: preserve-3d; }
+.scene-stop > span { position: absolute; top: -7px; left: -13px; padding: 6px; background: var(--deep-blue); color: var(--ice-blue); border: 2px solid var(--ice-blue); border-radius: 6px; }
+.scene-tag { position: absolute; display: flex; align-items: center; gap: 12px; border: 1px solid #fff; background: #E8F1FAed; box-shadow: 0 14px 35px #1B3A6B16; border-radius: 14px; padding: 14px 18px; animation: campus-float 6s ease-in-out infinite; }
+.scene-tag-pass { right: 0; top: 32px; }
+.scene-tag-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: var(--pale-blue); color: var(--deep-blue); }
+.scene-tag small { display: block; font-size: 8px; letter-spacing: .12em; color: var(--medium-blue); margin-bottom: 3px; }.scene-tag strong { display: block; font-size: 12px; color: var(--deep-blue); }
+.scene-tag-route { bottom: 23px; left: 15px; color: var(--deep-blue); font-size: 11px; animation-delay: -3s; }
+.scene-tag-route > span { display: flex; align-items: center; gap: 12px; }.tag-route-line { width: 35px; border-top: 1px dashed var(--slate-blue); }
+.scene-caption { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; font-size: 10px; color: var(--medium-blue); }
+.scene-caption > span { display: flex; align-items: center; gap: 7px; }
+.scene-motion-control { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 8px; border: 1px solid var(--light-blue); border-radius: 8px; color: var(--deep-blue); background: var(--ice-blue); font-size: 10px; }
+.scene-motion-control:hover { background: var(--pale-blue); }
+.campus-diorama.scene-paused *, .campus-diorama[data-visible="false"] * { animation-play-state: paused; }
+@keyframes campus-orbit { 0%, 100% { transform: rotateX(-24deg) rotateY(-32deg) translateY(0); } 50% { transform: rotateX(-20deg) rotateY(-25deg) translateY(-6px); } }
+@keyframes campus-drive { 0%, 100% { transform: translateX(-12px); } 50% { transform: translateX(12px); } }
+@keyframes campus-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@media (max-width: 1100px) and (min-width: 801px) { .scene-scale { scale: .8; }.scene-viewport { height: 390px; }.scene-tag-pass { right: -5px; }.scene-halo { width: 320px; height: 320px; } }
+@media (max-width: 600px) { .scene-scale { scale: .72; }.scene-viewport { height: 350px; }.scene-halo { width: 280px; height: 280px; }.scene-tag-pass { top: 4px; right: 0; padding: 10px 12px; }.scene-tag-route { left: 0; bottom: 0; }.scene-caption { padding: 14px 0 0; font-size: 9px; }.scene-label { padding: 0; font-size: 10px; } }
+@media (max-width: 440px) { .scene-scale { scale: .62; } }
+@media (max-width: 380px) { .scene-scale { scale: .55; }.scene-viewport { height: 315px; }.scene-tag-pass { font-size: 10px; }.scene-tag-pass strong { font-size: 10px; }.scene-caption { gap: 6px; } }
+@media (prefers-reduced-motion: reduce) { .campus-diorama * { animation: none !important; }.scene-motion-control { display: none; } }
