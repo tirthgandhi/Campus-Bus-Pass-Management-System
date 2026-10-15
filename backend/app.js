@@ -9,6 +9,8 @@ app.use('/api/auth', require('./common/routes/authRoutes'));
 app.use('/api/admin', require('./admin/adminRoutes'));
 app.use('/api/driver', require('./driver/driverRoutes'));
 app.use('/api/student', require('./student/studentRoutes'));
+// Alias — spec uses /api/students (plural), keep both working
+app.use('/api/students', require('./student/studentRoutes'));
 app.get('/', (req, res) => ok(res, {}, 'Campus Bus backend is running'));
 app.use((req, res) => res.status(404).json({ success: false, message: 'Endpoint not found.' }));
 app.use(errorHandler);
