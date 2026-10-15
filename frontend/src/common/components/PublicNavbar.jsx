@@ -29,14 +29,14 @@ export default function PublicNavbar() {
   const closeMenus = () => { setOpen(false); setRegisterOpen(false); };
 
   // Determine what to show in the nav actions based on auth state
-  function NavActions() {
+  function renderNavActions() {
     if (isAuthenticated && user) {
       if (user.role === 'student') {
         return (
           <div className="public-nav-actions">
             <a
               className="nav-login"
-              href="http://localhost:5174/"
+              href="/student/dashboard"
               onClick={closeMenus}
             >
               My Dashboard
@@ -104,7 +104,7 @@ export default function PublicNavbar() {
             <a href="/#how-it-works" onClick={closeMenus}>How It Works</a>
             <a href="/#portal" onClick={closeMenus}>Portal</a>
           </div>
-          <NavActions />
+          {renderNavActions()}
         </nav>
       </div>
     </header>

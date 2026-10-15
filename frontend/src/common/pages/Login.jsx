@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import AuthLayout from '../components/AuthLayout';
+import AuthLayout from '../layouts/AuthLayout';
 import Icon from '../components/Icon';
 import Input from '../components/Input';
 import Loader from '../components/Loader';
@@ -69,9 +69,11 @@ export default function Login() {
     setSubmitting(true);
     try {
       const authenticatedUser = await login(email.trim().toLowerCase(), password, role);
-      // Students are redirected externally to the student module — don't navigate internally
-      if (active.current && authenticatedUser.role !== 'student') {
-        navigate(returnPath(location.state?.from, authenticatedUser.role), { replace: true });
+      if (active.current) {
+        const destination = authenticatedUser.role === 'driver'
+          ? getDashboardPath('driver')
+          : returnPath(location.state?.from, authenticatedUser.role);
+        navigate(destination, { replace: true });
       }
     } catch (err) {
       if (active.current) setError(getApiError(err, 'login'));

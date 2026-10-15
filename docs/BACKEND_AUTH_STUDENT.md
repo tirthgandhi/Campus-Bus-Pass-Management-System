@@ -18,6 +18,10 @@ Base prefixes remain `/api/auth` and `/api/student`. Responses consistently use 
 
 Signup and login return `data: { _id, name, email, role, token }`; `/me` omits token. Student login uses collegeEmail through the common `email` request field. Public registration never creates an admin. Logout clears the frontend session; there is no logout API.
 
+### Legacy driver account migration
+
+Driver accounts created before the direct-account authentication change stored their password hash on a linked `User` record. The current login reads credentials from `Driver`, so those records need migration. Back up the configured database before proceeding. From `backend/`, run `npm run migrate:legacy-drivers` to review a read-only dry-run summary. If the eligible/skipped counts are as expected, run `npm run migrate:legacy-drivers -- --apply` to copy eligible driver details and the existing bcrypt hash into each existing driver record. The script does not print password hashes, reset passwords, delete legacy users, or write during dry-run. Records with missing/invalid credentials, contact details, or duplicate email/license values are skipped and need administrator review.
+
 ## Student module
 
 All endpoints below require the student role. Identity is always taken from the verified JWT.

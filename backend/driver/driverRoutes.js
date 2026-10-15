@@ -13,4 +13,6 @@ router.get('/students', wrap(controller.getAssignedStudents));
 router.post('/verify-bus-pass', wrap(controller.verifyBusPassId));
 router.post('/attendance', wrap(controller.markAttendance));
 router.get('/attendance/today', wrap(controller.getTodayAttendance));
+router.post('/report-problem', wrap(controller.reportProblem));
+router.get('/problems', wrap(controller.getMyProblems));
 module.exports = router;
