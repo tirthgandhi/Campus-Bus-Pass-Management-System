@@ -28,7 +28,7 @@ exports.getDriverDashboard = async (req, res) => {
   const bus = driver.assignedBus ? await assignedBus(driver) : null;
   const route = driver.assignedRoute ? await assignedRoute(driver) : null;
   const students = bus && route ? await BusAssignment.countDocuments({ bus: bus._id, route: route._id, status: 'active' }) : 0;
-  const todayAttendance = await Attendance.countDocuments({ driver: driver._id, date: day() });
+  const todayAttendance = await Attendance.countDocuments({ driver: driver._id, date: day(), status: 'present' });
   return ok(res, { driver, bus, route, assignedStudents: students, todayAttendance });
 };
 exports.getAssignedBus = async (req, res) => ok(res, req.account.assignedBus ? await assignedBus(req.account) : null);
@@ -55,3 +55,29 @@ exports.markAttendance = async (req, res) => {
   return ok(res, attendance, 'Attendance recorded', 201);
 };
 exports.getTodayAttendance = async (req, res) => ok(res, await Attendance.find({ driver: req.user.id, date: day() }).populate('student bus route').sort({ markedAt: -1 }));
+exports.reportProblem = async (req, res) => {
+  const driver = req.account;
+  if (!driver.assignedBus) fail(409, 'You need an assigned bus to report a problem.');
+  const bus = await assignedBus(driver);
+  const problemType = text(req.body.problemType, 'Problem type', { max: 40 });
+  const severity = text(req.body.severity, 'Severity', { max: 20 });
+  if (!['Engine Problem', 'Brake Problem', 'Tyre Problem', 'Electrical Problem', 'Fuel Problem', 'Other'].includes(problemType)) fail(400, 'Choose a valid problem type.');
+  if (!['Low', 'Medium', 'High', 'Critical'].includes(severity)) fail(400, 'Choose a valid severity.');
+  bus.problemReports.push({
+    driver: driver._id,
+    problemType,
+    severity,
+    description: text(req.body.description, 'Description', { max: 1000 })
+  });
+  await bus.save();
+  const problem = bus.problemReports[bus.problemReports.length - 1];
+  return ok(res, problem, 'Problem reported successfully', 201);
+};
+exports.getMyProblems = async (req, res) => {
+  if (!req.account.assignedBus) return ok(res, []);
+  const bus = await assignedBus(req.account);
+  const problems = bus.problemReports
+    .filter(problem => sameId(problem.driver, req.account))
+    .sort((first, second) => second.reportedAt - first.reportedAt);
+  return ok(res, problems);
+};

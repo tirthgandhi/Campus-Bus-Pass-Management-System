@@ -6,6 +6,14 @@ const schema = new mongoose.Schema({
   busType: { type: String, enum: ['university', 'hired'], default: 'university' },
   status: { type: String, enum: ['active', 'inactive', 'maintenance'], default: 'active' },
   assignedDriver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver', default: null },
+  problemReports: [{
+    driver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver', required: true },
+    problemType: { type: String, enum: ['Engine Problem', 'Brake Problem', 'Tyre Problem', 'Electrical Problem', 'Fuel Problem', 'Other'], required: true },
+    description: { type: String, required: true, trim: true, maxlength: 1000 },
+    severity: { type: String, enum: ['Low', 'Medium', 'High', 'Critical'], required: true },
+    status: { type: String, enum: ['Open', 'In Progress', 'Resolved'], default: 'Open' },
+    reportedAt: { type: Date, default: Date.now },
+  }],
   // Incremented within assignment transactions to serialize capacity checks.
   assignmentSequence: { type: Number, default: 0, min: 0 },
 }, { timestamps: true });
