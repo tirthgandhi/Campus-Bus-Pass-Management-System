@@ -1,8 +1,8 @@
 import { useState } from "react";
-import AppLayout from "../components/layout/AppLayout";
-import { verifyPass, recordAttendance } from "../api/driverApi";
+import AppLayout from "../components/DriverLayout";
+import { verifyPass, recordAttendance } from "../services/driverApi";
 
-export default function VerifyStudent() {
+export default function VerifyBusPass() {
   const [passNumber, setPassNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [accepting, setAccepting] = useState(false);

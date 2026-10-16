@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import AppLayout from "../components/layout/AppLayout";
-import Spinner from "../components/ui/Spinner";
-import { getAssignedRoute } from "../api/driverApi";
+import AppLayout from "../components/DriverLayout";
+import Spinner from "../components/Spinner";
+import { getAssignedRoute } from "../services/driverApi";
 
-export default function RoutePage() {
+export default function AssignedRoute() {
   const [route, setRoute] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

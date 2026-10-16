@@ -43,7 +43,7 @@ router.get('/dashboard',          wrap(c.getDashboard));
 
 // ─── LEGACY ALIASES ──────────────────────────────────────────────────────────
 router.post('/passes',            wrap(c.submitTransportRequest));
-router.get('/passes/my',          wrap(c.getTransportRequest));
+router.get('/passes/my',          wrap(c.getMyPasses));
 router.get('/buspasses/my',       wrap(c.getMyBusPass));
 
 module.exports = router;

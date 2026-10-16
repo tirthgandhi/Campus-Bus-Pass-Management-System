@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import AppLayout from "../components/layout/AppLayout";
-import Spinner from "../components/ui/Spinner";
-import { getTodayAttendance } from "../api/driverApi";
+import AppLayout from "../components/DriverLayout";
+import Spinner from "../components/Spinner";
+import { getTodayAttendance } from "../services/driverApi";
 
-export default function Attendance() {
+export default function MarkAttendance() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

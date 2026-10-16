@@ -25,13 +25,13 @@ import ManageAssignments from '../../admin/pages/ManageAssignments';
 import ViewAttendance from '../../admin/pages/ViewAttendance';
 import Reports from '../../admin/pages/Reports';
 import AdminProfile from '../../admin/pages/AdminProfile';
-import DriverDashboard from '../../pages/Dashboard';
-import DriverVerifyStudent from '../../pages/VerifyStudent';
-import DriverStudents from '../../pages/Students';
-import DriverAttendance from '../../pages/Attendance';
-import DriverRoute from '../../pages/RoutePage';
-import DriverProfile from '../../pages/Profile';
-import DriverReportProblem from '../../pages/ReportProblem';
+import DriverDashboard from '../../driver/pages/DriverDashboard';
+import DriverVerifyStudent from '../../driver/pages/VerifyBusPass';
+import DriverStudents from '../../driver/pages/AssignedStudents';
+import DriverAttendance from '../../driver/pages/MarkAttendance';
+import DriverRoute from '../../driver/pages/AssignedRoute';
+import DriverProfile from '../../driver/pages/DriverProfile';
+import DriverReportProblem from '../../driver/pages/ReportProblem';
 
 function DashboardRedirect() {
   const { user } = useAuth();

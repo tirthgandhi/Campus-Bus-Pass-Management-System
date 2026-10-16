@@ -1,6 +1,6 @@
 import { useState } from "react";
-import AppLayout from "../components/layout/AppLayout";
-import { reportProblem } from "../api/driverApi";
+import AppLayout from "../components/DriverLayout";
+import { reportProblem } from "../services/driverApi";
 
 export default function ReportProblem() {
   const [problemType, setProblemType] = useState("");
