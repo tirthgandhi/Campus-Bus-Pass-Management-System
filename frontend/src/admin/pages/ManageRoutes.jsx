@@ -1,15 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import AdminModal from '../components/AdminModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Icon from '../../common/components/Icon';
-import { initialRoutes } from '../data/adminMockData';
 import { useAdminToast } from '../context/AdminToastContext';
+import { routeService } from '../services/routeService';
 
 export default function ManageRoutes() {
   const { showToast } = useAdminToast();
-  const [routes, setRoutes] = useState(initialRoutes);
+  const [routes, setRoutes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,6 +22,28 @@ export default function ManageRoutes() {
   const [editingRoute, setEditingRoute] = useState(null);
   const [viewingRoute, setViewingRoute] = useState(null);
   const [deletingRoute, setDeletingRoute] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Load routes on mount
+  useEffect(() => {
+    loadRoutes();
+  }, []);
+
+  const loadRoutes = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await routeService.getRoutes(1, 100);
+      const routesData = response.data || [];
+      setRoutes(routesData);
+    } catch (err) {
+      const errorMsg = err.message || 'Failed to load routes';
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Form State
   const [formData, setFormData] = useState({
@@ -83,7 +107,7 @@ export default function ManageRoutes() {
     return errors;
   };
 
-  const handleSaveRoute = (e) => {
+  const handleSaveRoute = async (e) => {
     e.preventDefault();
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -91,31 +115,39 @@ export default function ManageRoutes() {
       return;
     }
 
-    if (editingRoute) {
-      setRoutes((prev) =>
-        prev.map((r) =>
-          r.id === editingRoute.id ? { ...r, ...formData } : r
-        )
-      );
-      showToast('Route updated successfully.', 'success');
-    } else {
-      const newRoute = {
-        id: `RT-00${routes.length + 1}`,
-        ...formData,
-        pickupPoints: 4,
-      };
-      setRoutes((prev) => [newRoute, ...prev]);
-      showToast('Route added successfully.', 'success');
+    try {
+      setIsSubmitting(true);
+      if (editingRoute) {
+        await routeService.updateRoute(editingRoute._id, formData);
+        showToast('Route updated successfully.', 'success');
+      } else {
+        await routeService.createRoute(formData);
+        showToast('Route added successfully.', 'success');
+      }
+      setIsFormModalOpen(false);
+      await loadRoutes();
+    } catch (err) {
+      const errorMsg = err.message || 'Failed to save route';
+      showToast(errorMsg, 'error');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsFormModalOpen(false);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingRoute) return;
-    setRoutes((prev) => prev.filter((r) => r.id !== deletingRoute.id));
-    showToast('Route deleted successfully.', 'success');
-    setDeletingRoute(null);
+    try {
+      setIsSubmitting(true);
+      await routeService.deleteRoute(deletingRoute._id);
+      showToast('Route deleted successfully.', 'success');
+      setDeletingRoute(null);
+      await loadRoutes();
+    } catch (err) {
+      const errorMsg = err.message || 'Failed to delete route';
+      showToast(errorMsg, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const columns = [
@@ -228,13 +260,28 @@ export default function ManageRoutes() {
       </div>
 
       {/* Table */}
-      <DataTable
-        columns={columns}
-        data={filteredRoutes}
-        keyField="id"
-        emptyMessage="No routes found."
-        emptySubtitle="Try adjusting your search criteria."
-      />
+      {loading && (
+        <div className="admin-loading">
+          <p>Loading routes...</p>
+        </div>
+      )}
+      {error && (
+        <div className="admin-error">
+          <p>{error}</p>
+          <button type="button" className="admin-btn admin-btn-primary" onClick={loadRoutes}>
+            Retry
+          </button>
+        </div>
+      )}
+      {!loading && !error && (
+        <DataTable
+          columns={columns}
+          data={filteredRoutes}
+          keyField="_id"
+          emptyMessage="No routes found."
+          emptySubtitle="Try adjusting your search criteria."
+        />
+      )}
 
       {/* Add / Edit Route Modal */}
       <AdminModal
@@ -248,6 +295,7 @@ export default function ManageRoutes() {
               type="button"
               className="admin-btn admin-btn-secondary"
               onClick={() => setIsFormModalOpen(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
@@ -255,8 +303,9 @@ export default function ManageRoutes() {
               type="button"
               className="admin-btn admin-btn-primary"
               onClick={handleSaveRoute}
+              disabled={isSubmitting}
             >
-              Save Route
+              {isSubmitting ? 'Saving...' : 'Save Route'}
             </button>
           </>
         }

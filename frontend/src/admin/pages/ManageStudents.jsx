@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import AdminModal from '../components/AdminModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Icon from '../../common/components/Icon';
-import { initialStudents } from '../data/adminMockData';
 import { useAdminToast } from '../context/AdminToastContext';
+import { studentService } from '../services/studentService';
 
 const DEPARTMENTS = [
   'Computer Science',
@@ -17,12 +17,35 @@ const DEPARTMENTS = [
 
 export default function ManageStudents() {
   const { showToast } = useAdminToast();
-  const [students, setStudents] = useState(initialStudents);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  // Load data on mount
+  useEffect(() => {
+    loadStudents();
+  }, [page]);
+
+  const loadStudents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await studentService.getStudents(page, limit, searchQuery);
+      setStudents(response.data || []);
+    } catch (err) {
+      setError(err.message);
+      showToast(`Error loading students: ${err.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Modals state
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -103,7 +126,7 @@ export default function ManageStudents() {
     return errors;
   };
 
-  const handleSaveStudent = (e) => {
+  const handleSaveStudent = async (e) => {
     e.preventDefault();
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -111,35 +134,32 @@ export default function ManageStudents() {
       return;
     }
 
-    if (editingStudent) {
-      setStudents((prev) =>
-        prev.map((s) =>
-          s.id === editingStudent.id
-            ? { ...s, ...formData }
-            : s
-        )
-      );
-      showToast('Student updated successfully.', 'success');
-    } else {
-      const newStudent = {
-        id: `STU-00${students.length + 1}`,
-        ...formData,
-        assignedBus: 'Unassigned',
-        assignedRoute: 'Unassigned',
-        pickupPoint: 'Pending Selection',
-      };
-      setStudents((prev) => [newStudent, ...prev]);
-      showToast('Student added successfully.', 'success');
-    }
+    try {
+      if (editingStudent) {
+        await studentService.updateStudent(editingStudent._id, formData);
+        showToast('Student updated successfully.', 'success');
+      } else {
+        await studentService.createStudent(formData);
+        showToast('Student added successfully.', 'success');
+      }
 
-    setIsFormModalOpen(false);
+      setIsFormModalOpen(false);
+      loadStudents();
+    } catch (err) {
+      showToast(`Error saving student: ${err.message}`, 'error');
+    }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingStudent) return;
-    setStudents((prev) => prev.filter((s) => s.id !== deletingStudent.id));
-    showToast('Student deleted successfully.', 'success');
-    setDeletingStudent(null);
+    try {
+      await studentService.deleteStudent(deletingStudent._id);
+      showToast('Student deleted successfully.', 'success');
+      setDeletingStudent(null);
+      loadStudents();
+    } catch (err) {
+      showToast(`Error deleting student: ${err.message}`, 'error');
+    }
   };
 
   const columns = [
@@ -155,7 +175,7 @@ export default function ManageStudents() {
     {
       title: 'Status',
       key: 'status',
-      render: (val) => <StatusBadge status={val} />,
+      render: (val) => <StatusBadge status={val || 'Active'} />,
     },
     {
       title: 'Actions',
@@ -261,7 +281,7 @@ export default function ManageStudents() {
       <DataTable
         columns={columns}
         data={filteredStudents}
-        keyField="id"
+        keyField="_id"
         emptyMessage="No students found."
         emptySubtitle="Try adjusting your search or filter options."
       />
@@ -441,17 +461,8 @@ export default function ManageStudents() {
 
             <dt className="admin-info-dt">Current Status:</dt>
             <dd className="admin-info-dd">
-              <StatusBadge status={viewingStudent.status} />
+              <StatusBadge status={viewingStudent.status || 'Active'} />
             </dd>
-
-            <dt className="admin-info-dt">Assigned Bus:</dt>
-            <dd className="admin-info-dd">{viewingStudent.assignedBus}</dd>
-
-            <dt className="admin-info-dt">Assigned Route:</dt>
-            <dd className="admin-info-dd">{viewingStudent.assignedRoute}</dd>
-
-            <dt className="admin-info-dt">Pickup Point:</dt>
-            <dd className="admin-info-dd">{viewingStudent.pickupPoint}</dd>
           </dl>
         </AdminModal>
       )}

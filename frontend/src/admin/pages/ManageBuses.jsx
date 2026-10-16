@@ -1,20 +1,55 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import StatCard from '../components/StatCard';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import AdminModal from '../components/AdminModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Icon from '../../common/components/Icon';
-import { initialBuses, initialDrivers } from '../data/adminMockData';
 import { useAdminToast } from '../context/AdminToastContext';
+import { busService } from '../services/busService';
+import { driverService } from '../services/driverService';
 
 export default function ManageBuses() {
   const { showToast } = useAdminToast();
-  const [buses, setBuses] = useState(initialBuses);
+  const [buses, setBuses] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  // Load data on mount
+  useEffect(() => {
+    loadBuses();
+    loadDrivers();
+  }, [page]);
+
+  const loadBuses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await busService.getBuses(page, limit, searchQuery);
+      setBuses(response.data || []);
+    } catch (err) {
+      setError(err.message);
+      showToast(`Error loading buses: ${err.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDrivers = async () => {
+    try {
+      const response = await driverService.getDrivers(1, 100);
+      setDrivers(response.data || []);
+    } catch (err) {
+      console.error('Error loading drivers:', err);
+    }
+  };
 
   // Modals
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -67,11 +102,11 @@ export default function ManageBuses() {
   const handleOpenEdit = (bus) => {
     setEditingBus(bus);
     setFormData({
-      busNumber: bus.busNumber,
-      registrationNumber: bus.registrationNumber,
-      capacity: bus.capacity,
-      assignedDriver: bus.assignedDriver,
-      status: bus.status,
+      busNumber: bus.busNumber || '',
+      registrationNumber: bus.registrationNumber || '',
+      capacity: bus.capacity || 48,
+      assignedDriver: bus.assignedDriver || 'Unassigned',
+      status: bus.status || 'Active',
     });
     setFormErrors({});
     setIsFormModalOpen(true);
@@ -90,7 +125,7 @@ export default function ManageBuses() {
     return errors;
   };
 
-  const handleSaveBus = (e) => {
+  const handleSaveBus = async (e) => {
     e.preventDefault();
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -98,33 +133,37 @@ export default function ManageBuses() {
       return;
     }
 
-    if (editingBus) {
-      setBuses((prev) =>
-        prev.map((b) =>
-          b.id === editingBus.id
-            ? { ...b, ...formData, capacity: Number(formData.capacity) }
-            : b
-        )
-      );
-      showToast('Bus updated successfully.', 'success');
-    } else {
-      const newBus = {
-        id: `BUS-00${buses.length + 1}`,
+    try {
+      const dataToSave = {
         ...formData,
         capacity: Number(formData.capacity),
       };
-      setBuses((prev) => [newBus, ...prev]);
-      showToast('Bus added successfully.', 'success');
-    }
 
-    setIsFormModalOpen(false);
+      if (editingBus) {
+        await busService.updateBus(editingBus._id, dataToSave);
+        showToast('Bus updated successfully.', 'success');
+      } else {
+        await busService.createBus(dataToSave);
+        showToast('Bus added successfully.', 'success');
+      }
+
+      setIsFormModalOpen(false);
+      loadBuses();
+    } catch (err) {
+      showToast(`Error saving bus: ${err.message}`, 'error');
+    }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingBus) return;
-    setBuses((prev) => prev.filter((b) => b.id !== deletingBus.id));
-    showToast('Bus deleted successfully.', 'success');
-    setDeletingBus(null);
+    try {
+      await busService.deleteBus(deletingBus._id);
+      showToast('Bus deleted successfully.', 'success');
+      setDeletingBus(null);
+      loadBuses();
+    } catch (err) {
+      showToast(`Error deleting bus: ${err.message}`, 'error');
+    }
   };
 
   const columns = [
@@ -143,7 +182,7 @@ export default function ManageBuses() {
     {
       title: 'Status',
       key: 'status',
-      render: (val) => <StatusBadge status={val} />,
+      render: (val) => <StatusBadge status={val || 'Active'} />,
     },
     {
       title: 'Actions',
@@ -263,7 +302,7 @@ export default function ManageBuses() {
       <DataTable
         columns={columns}
         data={filteredBuses}
-        keyField="id"
+        keyField="_id"
         emptyMessage="No buses found."
         emptySubtitle="Try adjusting your search criteria."
       />
@@ -365,8 +404,8 @@ export default function ManageBuses() {
                 }
               >
                 <option value="Unassigned">Unassigned</option>
-                {initialDrivers.map((d) => (
-                  <option key={d.id} value={d.name}>
+                {drivers.map((d) => (
+                  <option key={d._id} value={d.name}>
                     {d.name} ({d.licenseNumber})
                   </option>
                 ))}

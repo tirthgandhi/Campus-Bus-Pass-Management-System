@@ -1,19 +1,42 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import AdminModal from '../components/AdminModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Icon from '../../common/components/Icon';
-import { initialDrivers } from '../data/adminMockData';
 import { useAdminToast } from '../context/AdminToastContext';
+import { driverService } from '../services/driverService';
 
 export default function ManageDrivers() {
   const { showToast } = useAdminToast();
-  const [drivers, setDrivers] = useState(initialDrivers);
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  // Load data on mount
+  useEffect(() => {
+    loadDrivers();
+  }, [page]);
+
+  const loadDrivers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await driverService.getDrivers(page, limit, searchQuery);
+      setDrivers(response.data || []);
+    } catch (err) {
+      setError(err.message);
+      showToast(`Error loading drivers: ${err.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Modals
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -89,7 +112,7 @@ export default function ManageDrivers() {
     return errors;
   };
 
-  const handleSaveDriver = (e) => {
+  const handleSaveDriver = async (e) => {
     e.preventDefault();
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -97,31 +120,32 @@ export default function ManageDrivers() {
       return;
     }
 
-    if (editingDriver) {
-      setDrivers((prev) =>
-        prev.map((d) =>
-          d.id === editingDriver.id ? { ...d, ...formData } : d
-        )
-      );
-      showToast('Driver updated successfully.', 'success');
-    } else {
-      const newDriver = {
-        id: `DRV-00${drivers.length + 1}`,
-        ...formData,
-        assignedBus: 'Unassigned',
-      };
-      setDrivers((prev) => [newDriver, ...prev]);
-      showToast('Driver added successfully.', 'success');
-    }
+    try {
+      if (editingDriver) {
+        await driverService.updateDriver(editingDriver._id, formData);
+        showToast('Driver updated successfully.', 'success');
+      } else {
+        await driverService.createDriver(formData);
+        showToast('Driver added successfully.', 'success');
+      }
 
-    setIsFormModalOpen(false);
+      setIsFormModalOpen(false);
+      loadDrivers();
+    } catch (err) {
+      showToast(`Error saving driver: ${err.message}`, 'error');
+    }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingDriver) return;
-    setDrivers((prev) => prev.filter((d) => d.id !== deletingDriver.id));
-    showToast('Driver deleted successfully.', 'success');
-    setDeletingDriver(null);
+    try {
+      await driverService.deleteDriver(deletingDriver._id);
+      showToast('Driver deleted successfully.', 'success');
+      setDeletingDriver(null);
+      loadDrivers();
+    } catch (err) {
+      showToast(`Error deleting driver: ${err.message}`, 'error');
+    }
   };
 
   const columns = [
@@ -228,7 +252,7 @@ export default function ManageDrivers() {
       <DataTable
         columns={columns}
         data={filteredDrivers}
-        keyField="id"
+        keyField="_id"
         emptyMessage="No drivers found."
         emptySubtitle="Try adjusting your search criteria."
       />
