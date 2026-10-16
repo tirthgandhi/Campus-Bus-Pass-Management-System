@@ -31,7 +31,9 @@ async function signIn(req, res, verifiedOnly = false) {
   if (!account || !(await account.matchPassword(req.body.password))) fail(401, 'Invalid email or password.');
   if (account.status === 'inactive' || account.transportStatus === 'inactive') fail(403, 'This account is inactive.');
   if (verifiedOnly && role !== 'admin' && !account.isVerified) fail(403, 'Please verify your email before signing in.');
-  return ok(res, { ...identity(account, role), token: generateToken(account._id, role) }, 'Login successful');
+  const token = generateToken(account._id, role);
+  const user = identity(account, role);
+  return res.status(200).json({ success: true, message: 'Login successful', token, user, data: { ...user, token, user } });
 }
 exports.login = (req, res) => signIn(req, res);
 exports.loginVerified = (req, res) => signIn(req, res, true);

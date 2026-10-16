@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import AppLayout from "../components/layout/AppLayout";
-import Spinner from "../components/ui/Spinner";
-import { getStudents } from "../api/driverApi";
+import AppLayout from "../components/DriverLayout";
+import Spinner from "../components/Spinner";
+import { getStudents } from "../services/driverApi";
 
-export default function Students() {
+export default function AssignedStudents() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

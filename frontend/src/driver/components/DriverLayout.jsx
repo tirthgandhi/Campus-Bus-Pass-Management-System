@@ -68,7 +68,7 @@ const links = [
   },
 ];
 
-export default function AppLayout({ title, children }) {
+export default function DriverLayout({ title, children }) {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();

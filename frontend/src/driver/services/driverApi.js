@@ -1,4 +1,4 @@
-import api from "../common/services/api.js";
+import api from "../../common/services/api.js";
 
 function mapResponse(request, mapData) {
   return request.then((response) => ({

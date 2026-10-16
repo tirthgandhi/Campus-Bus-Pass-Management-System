@@ -41,7 +41,7 @@ export default function StudentApp() {
   const [transportReq, setTransportReq] = useState(null);
   const [assignment, setAssignment] = useState(null);
   const [busPass, setBusPass]       = useState(null); // local-only for Apply form state
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading]       = useState(typeof window !== "undefined");
 
   // Fetch all student data on mount
   useEffect(() => {

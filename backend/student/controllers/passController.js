@@ -61,8 +61,7 @@ exports.submitTransportRequest = async (req, res) => {
 
   await Student.updateOne({ _id: req.user.id }, { $set: { transportStatus: 'pending' } });
 
-  const populated = await TransportRequest.findById(request._id).populate('pickupPoint requestedRoute');
-  return ok(res, populated, 'Transport request submitted successfully', 201);
+  return ok(res, request, 'Transport request submitted successfully', 201);
 };
 
 exports.getTransportRequest = async (req, res) => {
@@ -93,7 +92,12 @@ exports.getMyBusPass = async (req, res) => {
     .populate('route', 'routeName routeCode startPoint endPoint timings')
     .populate('pickupPoint', 'name pickupTime');
 
-  if (!assignment) fail(404, 'Bus pass is not available yet.');
+  if (!assignment) {
+    if (req.path === '/buspasses/my' || req.originalUrl?.includes('/buspasses/my')) {
+      return ok(res, null);
+    }
+    fail(404, 'Bus pass is not available yet.');
+  }
 
   return ok(res, {
     busPassId: assignment.busPassId,
@@ -212,4 +216,4 @@ exports.getDashboard = async (req, res) => {
 // ─── LEGACY ALIASES (kept for backward compatibility) ─────────────────────────
 // These were referenced by the old route /passes and /passes/my
 exports.applyForPass = exports.submitTransportRequest;
-exports.getMyPasses = exports.getTransportRequest;
+exports.getMyPasses = async (req, res) => ok(res, await TransportRequest.find({ student: req.user.id }).populate('pickupPoint requestedRoute').sort({ createdAt: -1 }));

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import AppLayout from "../components/layout/AppLayout";
-import Spinner from "../components/ui/Spinner";
-import { getDashboard } from "../api/driverApi";
+import AppLayout from "../components/DriverLayout";
+import Spinner from "../components/Spinner";
+import { getDashboard } from "../services/driverApi";
 
-export default function Dashboard() {
+export default function DriverDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
