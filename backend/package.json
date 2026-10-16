@@ -9,6 +9,7 @@
     "test": "node tests/nine-model-integration.cjs",
     "test:migration": "node --test tests/legacy-driver-migration.test.cjs",
     "seed:admin": "node scripts/create-admin.js",
+    "seed:driver": "node scripts/seed-driver.js",
     "migrate:legacy-drivers": "node scripts/migrate-legacy-drivers.js"
   },
   "keywords": [],
