@@ -281,7 +281,7 @@ export default function ManageStudents() {
       <DataTable
         columns={columns}
         data={filteredStudents}
-        keyField="id"
+        keyField="_id"
         emptyMessage="No students found."
         emptySubtitle="Try adjusting your search or filter options."
       />

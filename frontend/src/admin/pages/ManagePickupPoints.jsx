@@ -1,85 +1,53 @@
 import { useState, useMemo, useEffect } from 'react';
 import DataTable from '../components/DataTable';
-import StatusBadge from '../components/StatusBadge';
 import AdminModal from '../components/AdminModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Icon from '../../common/components/Icon';
 import { useAdminToast } from '../context/AdminToastContext';
 import { pickupPointService } from '../services/pickupPointService';
-import { routeService } from '../services/routeService';
 
 export default function ManagePickupPoints() {
   const { showToast } = useAdminToast();
   const [pickupPoints, setPickupPoints] = useState([]);
-  const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [routeFilter, setRouteFilter] = useState('All');
 
-  // Modals
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingPoint, setEditingPoint] = useState(null);
-  const [viewingPoint, setViewingPoint] = useState(null);
-  const [deletingPoint, setDeletingPoint] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Form State
-  const [formData, setFormData] = useState({
-    pickupPoint: '',
-    address: '',
-    route: '',
-    pickupTime: '07:30 AM',
-    status: 'Active',
-  });
-  const [formErrors, setFormErrors] = useState({});
-
-  // Load data on mount
   useEffect(() => {
-    loadData();
+    loadPickupPoints();
   }, []);
 
-  const loadData = async () => {
+  const loadPickupPoints = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const [pointsRes, routesRes] = await Promise.all([
-        pickupPointService.getPickupPoints(1, 100),
-        routeService.getRoutes(1, 100),
-      ]);
-      setPickupPoints(pointsRes.data || []);
-      setRoutes(routesRes.data || []);
+      const response = await pickupPointService.getPickupPoints(1, 100, searchQuery);
+      setPickupPoints(response.data || []);
     } catch (err) {
-      const errorMsg = err.message || 'Failed to load data';
-      setError(errorMsg);
-      showToast(errorMsg, 'error');
+      showToast(`Error loading pickup points: ${err.message}`, 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredPoints = useMemo(() => {
-    return pickupPoints.filter((point) => {
-      const q = searchQuery.toLowerCase().trim();
-      const matchesSearch =
-        !q ||
-        point.pickupPoint.toLowerCase().includes(q) ||
-        point.address.toLowerCase().includes(q);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [editingPoint, setEditingPoint] = useState(null);
+  const [viewingPoint, setViewingPoint] = useState(null);
+  const [deletingPoint, setDeleteingPoint] = useState(null);
 
-      const matchesRoute = routeFilter === 'All' || point.route === routeFilter;
-      return matchesSearch && matchesRoute;
-    });
-  }, [pickupPoints, searchQuery, routeFilter]);
+  const [formData, setFormData] = useState({
+    pickupPoint: '',
+    address: '',
+    latitude: '',
+    longitude: '',
+    status: 'Active',
+  });
+  const [formErrors, setFormErrors] = useState({});
 
   const handleOpenAdd = () => {
     setEditingPoint(null);
     setFormData({
       pickupPoint: '',
       address: '',
-      route: routes[0]?._id || '',
-      pickupTime: '07:30 AM',
+      latitude: '',
+      longitude: '',
       status: 'Active',
     });
     setFormErrors({});
@@ -89,11 +57,11 @@ export default function ManagePickupPoints() {
   const handleOpenEdit = (point) => {
     setEditingPoint(point);
     setFormData({
-      pickupPoint: point.pickupPoint,
-      address: point.address,
-      route: point.route,
-      pickupTime: point.pickupTime,
-      status: point.status,
+      pickupPoint: point.pickupPoint || '',
+      address: point.address || '',
+      latitude: point.latitude || '',
+      longitude: point.longitude || '',
+      status: point.status || 'Active',
     });
     setFormErrors({});
     setIsFormModalOpen(true);
@@ -101,10 +69,8 @@ export default function ManagePickupPoints() {
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.pickupPoint.trim()) errors.pickupPoint = 'Pickup stop name is required.';
-    if (!formData.address.trim()) errors.address = 'Street landmark/address is required.';
-    if (!formData.route.trim()) errors.route = 'Associated transit route is required.';
-    if (!formData.pickupTime.trim()) errors.pickupTime = 'Designated boarding time is required.';
+    if (!formData.pickupPoint.trim()) errors.pickupPoint = 'Pickup point name is required.';
+    if (!formData.address.trim()) errors.address = 'Address is required.';
     return errors;
   };
 
@@ -117,7 +83,6 @@ export default function ManagePickupPoints() {
     }
 
     try {
-      setIsSubmitting(true);
       if (editingPoint) {
         await pickupPointService.updatePickupPoint(editingPoint._id, formData);
         showToast('Pickup point updated successfully.', 'success');
@@ -126,28 +91,21 @@ export default function ManagePickupPoints() {
         showToast('Pickup point added successfully.', 'success');
       }
       setIsFormModalOpen(false);
-      await loadData();
+      loadPickupPoints();
     } catch (err) {
-      const errorMsg = err.message || 'Failed to save pickup point';
-      showToast(errorMsg, 'error');
-    } finally {
-      setIsSubmitting(false);
+      showToast(`Error saving pickup point: ${err.message}`, 'error');
     }
   };
 
   const handleDeleteConfirm = async () => {
     if (!deletingPoint) return;
     try {
-      setIsSubmitting(true);
       await pickupPointService.deletePickupPoint(deletingPoint._id);
       showToast('Pickup point deleted successfully.', 'success');
-      setDeletingPoint(null);
-      await loadData();
+      setDeleteingPoint(null);
+      loadPickupPoints();
     } catch (err) {
-      const errorMsg = err.message || 'Failed to delete pickup point';
-      showToast(errorMsg, 'error');
-    } finally {
-      setIsSubmitting(false);
+      showToast(`Error deleting pickup point: ${err.message}`, 'error');
     }
   };
 
@@ -157,14 +115,8 @@ export default function ManagePickupPoints() {
       key: 'pickupPoint',
       render: (val) => <strong>{val}</strong>,
     },
-    { title: 'Address / Landmark', key: 'address' },
-    { title: 'Route', key: 'route' },
-    { title: 'Pickup Time', key: 'pickupTime' },
-    {
-      title: 'Status',
-      key: 'status',
-      render: (val) => <StatusBadge status={val} />,
-    },
+    { title: 'Address', key: 'address' },
+    { title: 'Status', key: 'status' },
     {
       title: 'Actions',
       key: 'actions',
@@ -174,27 +126,24 @@ export default function ManagePickupPoints() {
           <button
             type="button"
             className="admin-action-btn"
-            title="View Details"
             onClick={() => setViewingPoint(point)}
-            aria-label={`View details of ${point.pickupPoint}`}
+            title="View"
           >
             <Icon name="eye" size={15} />
           </button>
           <button
             type="button"
             className="admin-action-btn"
-            title="Edit Pickup Point"
             onClick={() => handleOpenEdit(point)}
-            aria-label={`Edit ${point.pickupPoint}`}
+            title="Edit"
           >
             <Icon name="edit" size={15} />
           </button>
           <button
             type="button"
             className="admin-action-btn admin-action-btn-danger"
-            title="Delete Pickup Point"
-            onClick={() => setDeletingPoint(point)}
-            aria-label={`Delete ${point.pickupPoint}`}
+            onClick={() => setDeleteingPoint(point)}
+            title="Delete"
           >
             <Icon name="trash" size={15} />
           </button>
@@ -205,11 +154,10 @@ export default function ManagePickupPoints() {
 
   return (
     <div className="admin-page-container">
-      {/* Header */}
       <div className="admin-page-header">
         <div className="admin-page-header-text">
           <h1>Manage Pickup Points</h1>
-          <p>Designated boarding locations and morning pickup schedules.</p>
+          <p>Bus stop locations and schedules.</p>
         </div>
         <div className="admin-page-actions">
           <button
@@ -223,165 +171,65 @@ export default function ManagePickupPoints() {
         </div>
       </div>
 
-      {/* Controls Bar */}
       <div className="admin-controls-bar">
         <div className="admin-filters-group">
           <div className="admin-search-input-wrap">
             <Icon name="search" size={16} />
             <input
               type="search"
-              placeholder="Search by Stop Name, Address..."
+              placeholder="Search pickup points..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search pickup points"
             />
           </div>
-
-          <select
-            className="admin-filter-select"
-            value={routeFilter}
-            onChange={(e) => setRouteFilter(e.target.value)}
-            aria-label="Filter by route"
-          >
-            <option value="All">All Routes</option>
-            {routes.map((r) => (
-              <option key={r._id} value={r._id}>
-                {r.routeName}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
-      {/* Table */}
-      {loading && (
-        <div className="admin-loading">
-          <p>Loading pickup points...</p>
-        </div>
-      )}
-      {error && (
-        <div className="admin-error">
-          <p>{error}</p>
-          <button type="button" className="admin-btn admin-btn-primary" onClick={loadData}>
-            Retry
-          </button>
-        </div>
-      )}
-      {!loading && !error && (
+      {loading ? (
+        <div><p>Loading...</p></div>
+      ) : (
         <DataTable
           columns={columns}
-          data={filteredPoints}
+          data={pickupPoints}
           keyField="_id"
           emptyMessage="No pickup points found."
-          emptySubtitle="Try adjusting your search criteria."
         />
       )}
 
-      {/* Add / Edit Pickup Point Modal */}
       <AdminModal
         open={isFormModalOpen}
-        title={editingPoint ? 'Edit Pickup Point' : 'Add New Pickup Point'}
+        title={editingPoint ? 'Edit Pickup Point' : 'Add Pickup Point'}
         onClose={() => setIsFormModalOpen(false)}
-        size="md"
         footer={
           <>
-            <button
-              type="button"
-              className="admin-btn admin-btn-secondary"
-              onClick={() => setIsFormModalOpen(false)}
-              disabled={isSubmitting}
-            >
+            <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setIsFormModalOpen(false)}>
               Cancel
             </button>
-            <button
-              type="button"
-              className="admin-btn admin-btn-primary"
-              onClick={handleSavePoint}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Saving...' : 'Save Pickup Point'}
+            <button type="button" className="admin-btn admin-btn-primary" onClick={handleSavePoint}>
+              Save
             </button>
           </>
         }
       >
-        <form noValidate onSubmit={handleSavePoint}>
+        <form onSubmit={handleSavePoint}>
           <div className="admin-form-group">
-            <label className="admin-form-label">
-              Pickup Point Name <span className="required">*</span>
-            </label>
+            <label className="admin-form-label">Pickup Point Name</label>
             <input
               type="text"
-              className={`admin-form-input ${formErrors.pickupPoint ? 'is-invalid' : ''}`}
-              placeholder="e.g. Greenwood Metro Station"
+              className="admin-form-input"
               value={formData.pickupPoint}
-              onChange={(e) => {
-                setFormData({ ...formData, pickupPoint: e.target.value });
-                setFormErrors({ ...formErrors, pickupPoint: '' });
-              }}
+              onChange={(e) => setFormData({ ...formData, pickupPoint: e.target.value })}
             />
-            {formErrors.pickupPoint && (
-              <span className="admin-form-error">{formErrors.pickupPoint}</span>
-            )}
           </div>
-
           <div className="admin-form-group">
-            <label className="admin-form-label">
-              Address / Landmark <span className="required">*</span>
-            </label>
+            <label className="admin-form-label">Address</label>
             <input
               type="text"
-              className={`admin-form-input ${formErrors.address ? 'is-invalid' : ''}`}
-              placeholder="e.g. Outer Ring Road, Gate 2, Opp. HDFC Bank"
+              className="admin-form-input"
               value={formData.address}
-              onChange={(e) => {
-                setFormData({ ...formData, address: e.target.value });
-                setFormErrors({ ...formErrors, address: '' });
-              }}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             />
-            {formErrors.address && (
-              <span className="admin-form-error">{formErrors.address}</span>
-            )}
           </div>
-
-          <div className="admin-form-row">
-            <div className="admin-form-group">
-              <label className="admin-form-label">
-                Route <span className="required">*</span>
-              </label>
-              <select
-                className="admin-form-select"
-                value={formData.route}
-                onChange={(e) => setFormData({ ...formData, route: e.target.value })}
-              >
-                <option value="">Select a route</option>
-                {routes.map((r) => (
-                  <option key={r._id} value={r._id}>
-                    {r.routeName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="admin-form-group">
-              <label className="admin-form-label">
-                Pickup Time <span className="required">*</span>
-              </label>
-              <input
-                type="text"
-                className={`admin-form-input ${formErrors.pickupTime ? 'is-invalid' : ''}`}
-                placeholder="e.g. 07:30 AM"
-                value={formData.pickupTime}
-                onChange={(e) => {
-                  setFormData({ ...formData, pickupTime: e.target.value });
-                  setFormErrors({ ...formErrors, pickupTime: '' });
-                }}
-              />
-              {formErrors.pickupTime && (
-                <span className="admin-form-error">{formErrors.pickupTime}</span>
-              )}
-            </div>
-          </div>
-
           <div className="admin-form-group">
             <label className="admin-form-label">Status</label>
             <select
@@ -396,59 +244,37 @@ export default function ManagePickupPoints() {
         </form>
       </AdminModal>
 
-      {/* Pickup Point Details Modal */}
       {viewingPoint && (
         <AdminModal
-          open={Boolean(viewingPoint)}
+          open={true}
           title="Pickup Point Details"
           onClose={() => setViewingPoint(null)}
-          size="md"
           footer={
-            <button
-              type="button"
-              className="admin-btn admin-btn-secondary"
-              onClick={() => setViewingPoint(null)}
-            >
+            <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setViewingPoint(null)}>
               Close
             </button>
           }
         >
           <dl className="admin-info-dl">
-            <dt className="admin-info-dt">Pickup Stop:</dt>
-            <dd className="admin-info-dd"><strong>{viewingPoint?.pickupPoint}</strong></dd>
-
-            <dt className="admin-info-dt">Stop ID:</dt>
-            <dd className="admin-info-dd"><code>{viewingPoint?._id}</code></dd>
-
-            <dt className="admin-info-dt">Location Landmark:</dt>
-            <dd className="admin-info-dd">{viewingPoint?.address}</dd>
-
-            <dt className="admin-info-dt">Assigned Route:</dt>
-            <dd className="admin-info-dd">
-              {routes.find(r => r._id === viewingPoint?.route)?.routeName || viewingPoint?.route}
-            </dd>
-
-            <dt className="admin-info-dt">Scheduled Pickup:</dt>
-            <dd className="admin-info-dd">{viewingPoint?.pickupTime}</dd>
-
-            <dt className="admin-info-dt">Current Status:</dt>
-            <dd className="admin-info-dd">
-              <StatusBadge status={viewingPoint?.status} />
-            </dd>
+            <dt>Name:</dt>
+            <dd><strong>{viewingPoint.pickupPoint}</strong></dd>
+            <dt>Address:</dt>
+            <dd>{viewingPoint.address}</dd>
+            <dt>Status:</dt>
+            <dd>{viewingPoint.status}</dd>
           </dl>
         </AdminModal>
       )}
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         open={Boolean(deletingPoint)}
         title="Delete Pickup Point?"
-        message={`Are you sure you want to delete ${deletingPoint?.pickupPoint}? Existing student pass holders mapped to this stop will need to be reallocated.`}
-        confirmText="Delete Stop"
+        message={`Delete ${deletingPoint?.pickupPoint}?`}
+        confirmText="Delete"
         cancelText="Cancel"
         danger={true}
         onConfirm={handleDeleteConfirm}
-        onClose={() => setDeletingPoint(null)}
+        onClose={() => setDeleteingPoint(null)}
       />
     </div>
   );

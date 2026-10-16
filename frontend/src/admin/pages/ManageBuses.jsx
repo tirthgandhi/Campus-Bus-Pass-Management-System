@@ -182,7 +182,7 @@ export default function ManageBuses() {
     {
       title: 'Status',
       key: 'status',
-      render: (val) => <StatusBadge status={val} />,
+      render: (val) => <StatusBadge status={val || 'Active'} />,
     },
     {
       title: 'Actions',
@@ -302,7 +302,7 @@ export default function ManageBuses() {
       <DataTable
         columns={columns}
         data={filteredBuses}
-        keyField="id"
+        keyField="_id"
         emptyMessage="No buses found."
         emptySubtitle="Try adjusting your search criteria."
       />
