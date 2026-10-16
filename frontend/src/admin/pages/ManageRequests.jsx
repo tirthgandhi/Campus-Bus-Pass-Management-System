@@ -1,20 +1,23 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import StatCard from '../components/StatCard';
 import DataTable from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import AdminModal from '../components/AdminModal';
 import Icon from '../../common/components/Icon';
-import {
-  initialRequests,
-  initialBuses,
-  initialRoutes,
-  initialPickupPoints,
-} from '../data/adminMockData';
 import { useAdminToast } from '../context/AdminToastContext';
+import { requestService } from '../services/requestService';
+import { busService } from '../services/busService';
+import { routeService } from '../services/routeService';
+import { pickupPointService } from '../services/pickupPointService';
 
 export default function ManageRequests() {
   const { showToast } = useAdminToast();
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState([]);
+  const [buses, setBuses] = useState([]);
+  const [routes, setRoutes] = useState([]);
+  const [pickupPoints, setPickupPoints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
