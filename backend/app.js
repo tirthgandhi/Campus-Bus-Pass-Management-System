@@ -8,6 +8,8 @@ app.use((req, res, next) => { req.body ??= {}; next(); });
 app.use('/api/auth', require('./common/routes/authRoutes'));
 app.use('/api/admin', require('./admin/adminRoutes'));
 app.use('/api/driver', require('./driver/driverRoutes'));
+// Alias — spec uses /api/drivers (plural), keep both working
+app.use('/api/drivers', require('./driver/driverRoutes'));
 app.use('/api/student', require('./student/studentRoutes'));
 // Alias — spec uses /api/students (plural), keep both working
 app.use('/api/students', require('./student/studentRoutes'));
